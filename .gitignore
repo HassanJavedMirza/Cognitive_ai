@@ -1,0 +1,29 @@
+# Node
+node_modules/
+dist/
+build/
+
+# Generated outputs
+backend/output/
+
+# ML Models
+*.pkl
+*.joblib
+*.pt
+*.h5
+
+# Media
+*.webm
+*.mp4
+*.avi
+*.mov
+
+# Python
+venv/
+__pycache__/
+*.pyc
+.env
+
+# IDE
+.vscode/
+.idea/

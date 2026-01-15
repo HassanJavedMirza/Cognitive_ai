@@ -1,0 +1,276 @@
+/* LoginPage.css - Enhanced for a stunning, modern look with glassmorphism, subtle animations, and improved visual hierarchy */
+
+.page {
+  min-height: 100vh;
+  width: 100vw; /* New — ensures full width */
+  
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  background-size: 400% 400%; /* New — required for animated gradients */
+  animation: gradientShift 8s ease infinite;
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  position: fixed; /* New — ensures full-page coverage always */
+  top: 0;
+  left: 0;
+
+  overflow-x: hidden; /* avoids side scroll */
+}
+
+
+/* Keyframe for gradient animation */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Header - Added fade-in animation and refined spacing */
+.header {
+  text-align: center;
+  margin-bottom: 40px; /* Increased space for better breathing room */
+  width: 100%;
+  max-width: 400px; /* Slightly wider for a more spacious feel */
+  animation: fadeInUp 1s ease-out; /* Smooth entrance animation */
+}
+
+.logo {
+  width: 100px; /* Even larger for prominence */
+  height: 100px;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2)); /* Subtle shadow for depth */
+  animation: bounceIn 1.2s ease-out; /* Playful bounce for the logo */
+}
+
+.title {
+  font-size: 2.5rem; /* Slightly larger for impact */
+  font-weight: 700; /* Bolder for emphasis */
+  color: #ffffff; /* White for contrast against gradient */
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Text shadow for readability */
+  animation: fadeInUp 1s ease-out 0.2s both; /* Delayed fade-in */
+}
+
+.hand-emoji {
+  font-size: 2.2rem;
+  line-height: 1;
+  animation: wiggle 2s ease-in-out infinite; /* Fun wiggle animation */
+}
+
+/* Wiggle animation for emoji */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+/* Subtitle remains hidden as per original */
+.subtitle {
+  display: none;
+}
+
+/* Body - Glassmorphism effect for a modern, frosted look */
+.body {
+  background: rgba(255, 255, 255, 0.1); /* Semi-transparent white for glass effect */
+  backdrop-filter: blur(15px); /* Blur the background for glassmorphism */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */
+  border-radius: 20px; /* More rounded for elegance */
+  padding: 30px; /* Generous padding for a spacious feel */
+  width: 100%;
+  max-width: 400px; /* Wider container */
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* More space between elements */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); /* Deeper shadow for floating effect */
+  animation: fadeInUp 1s ease-out 0.4s both; /* Delayed entrance */
+  height: 100%;
+}
+
+/* Input container - Enhanced with floating label effect */
+.input-container {
+  position: relative;
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  padding: 18px 18px 18px 55px; /* More padding for comfort */
+  border: none;
+  border-radius: 15px; /* Softer rounding */
+  font-size: 1.1rem;
+  background-color: rgba(255, 255, 255, 0.15); /* Semi-transparent for glassmorphism */
+  color: #ffffff;
+  box-sizing: border-box;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1); /* Inner shadow for depth */
+  transition: all 0.3s ease; /* Smooth transitions */
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.8);
+  transition: opacity 0.3s ease;
+}
+
+.input:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.25); /* Slightly more opaque on focus */
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: scale(1.02); /* Subtle scale on focus */
+}
+
+.icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.3rem;
+  transition: color 0.3s ease;
+}
+
+.input:focus + .icon {
+  color: #ffffff; /* Brighten icon on focus */
+}
+
+.password-toggle-icon {
+  right: 18px;
+  left: auto;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.password-toggle-icon:hover {
+  transform: translateY(-50%) scale(1.1); /* Slight scale on hover */
+}
+
+/* Submit button - Gradient background with advanced hover effects */
+.submitBtn {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); /* Gradient for depth */
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border-radius: 15px;
+  margin-top: 25px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.submitBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.submitBtn:hover::before {
+  left: 100%; /* Shine effect on hover */
+}
+
+.submitBtn:hover {
+  background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); /* Reverse gradient on hover */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px); /* Lift effect */
+}
+
+.submitBtn:active {
+  transform: translateY(0); /* Press effect */
+}
+
+/* Error - Enhanced with animation */
+.error {
+  color: #ff6b6b; /* Softer red */
+  font-size: 1rem;
+  margin-top: 15px;
+  text-align: center;
+  background: rgba(255, 0, 0, 0.1);
+  padding: 10px;
+  border-radius: 10px;
+  animation: shake 0.5s ease-in-out; /* Shake animation for attention */
+}
+
+/* Shake animation for errors */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Fade-in animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive adjustments - Enhanced for better mobile experience */
+@media (max-width: 400px) {
+  .page {
+    padding: 15px;
+  }
+  .header {
+    margin-bottom: 30px;
+  }
+  .logo {
+    width: 80px;
+    height: 80px;
+  }
+  .title {
+    font-size: 2rem;
+  }
+  .hand-emoji {
+    font-size: 1.8rem;
+  }
+  .body {
+    padding: 20px;
+    max-width: 100%;
+  }
+  .input {
+    padding: 15px 15px 15px 50px;
+    font-size: 1rem;
+  }
+  .submitBtn {
+    padding: 15px;
+    font-size: 1.1rem;
+  }
+}

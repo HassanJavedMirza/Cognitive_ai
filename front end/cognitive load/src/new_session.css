@@ -1,0 +1,388 @@
+/* ========================================
+   Root Variables
+======================================== */
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  
+  --text-primary: #1a1a1a;
+  --text-secondary: #666;
+  --text-light: #999;
+  
+  --bg-page: #f5f7fa;
+  --bg-card: #ffffff;
+  --bg-input: #f8f9fa;
+  --bg-input-focus: #ffffff;
+  
+  --border-color: #e1e4e8;
+  --border-focus: #667eea;
+  
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-focus: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========================================
+   Page Container
+======================================== */
+.new-session-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  background: var(--bg-page);
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   Page Title
+======================================== */
+.page-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  letter-spacing: -0.5px;
+}
+
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 24px;
+  }
+}
+
+/* ========================================
+   Form Container
+======================================== */
+.new-session-form {
+  background: var(--bg-card);
+  padding: 40px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  margin-bottom: 24px;
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .new-session-form {
+    padding: 24px;
+  }
+}
+
+/* ========================================
+   Form Labels
+======================================== */
+.new-session-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  margin-top: 20px;
+  letter-spacing: 0.3px;
+}
+
+.new-session-form label:first-of-type {
+  margin-top: 0;
+}
+
+/* ========================================
+   Form Inputs & Selects
+======================================== */
+.new-session-form select,
+.new-session-form input[type="date"],
+.new-session-form input[type="time"] {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  transition: var(--transition);
+  font-family: inherit;
+  appearance: none;
+  cursor: pointer;
+}
+
+.new-session-form select {
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23666' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+
+.new-session-form select:focus,
+.new-session-form input[type="date"]:focus,
+.new-session-form input[type="time"]:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  background: var(--bg-input-focus);
+  box-shadow: var(--shadow-focus);
+  transform: translateY(-2px);
+}
+
+.new-session-form select:hover,
+.new-session-form input[type="date"]:hover,
+.new-session-form input[type="time"]:hover {
+  border-color: #b8c2d9;
+}
+
+/* Placeholder styling */
+.new-session-form select option[value=""] {
+  color: var(--text-light);
+}
+
+/* ========================================
+   Submit Button
+======================================== */
+.submit-btn {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: var(--primary-gradient);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  margin-top: 32px;
+  transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  letter-spacing: 0.5px;
+}
+
+.submit-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.submit-btn:active {
+  transform: translateY(-1px);
+}
+
+/* ========================================
+   Form Message
+======================================== */
+.form-message {
+  margin-top: 20px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Success message */
+.form-message:has-text("✅"),
+.form-message[class*="✅"] {
+  background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+  color: #155724;
+  border: 1px solid #96e6a1;
+}
+
+/* Error message */
+.form-message:has-text("❌"),
+.form-message[class*="❌"] {
+  background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+  color: #721c24;
+  border: 1px solid #fab1a0;
+}
+
+/* Warning message */
+.form-message:has-text("⚠️"),
+.form-message[class*="⚠️"] {
+  background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+  color: #856404;
+  border: 1px solid #fdcb6e;
+}
+
+/* ========================================
+   Back Button
+======================================== */
+.back-btn {
+  width: 100%;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  align-items: center;
+  margin-left: 240px;
+}
+
+.back-btn:hover {
+  color: var(--text-primary);
+  border-color: #667eea;
+  background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.back-btn:active {
+  transform: translateY(0);
+}
+
+/* ========================================
+   Form Field Groups with Animation
+======================================== */
+.new-session-form > label,
+.new-session-form > select,
+.new-session-form > input {
+  animation: fadeInField 0.4s ease-out backwards;
+}
+
+.new-session-form > label:nth-child(1),
+.new-session-form > select:nth-child(2) { animation-delay: 0.05s; }
+.new-session-form > label:nth-child(3),
+.new-session-form > select:nth-child(4) { animation-delay: 0.1s; }
+.new-session-form > label:nth-child(5),
+.new-session-form > select:nth-child(6) { animation-delay: 0.15s; }
+.new-session-form > label:nth-child(7),
+.new-session-form > select:nth-child(8) { animation-delay: 0.2s; }
+.new-session-form > label:nth-child(9),
+.new-session-form > input:nth-child(10) { animation-delay: 0.25s; }
+.new-session-form > label:nth-child(11),
+.new-session-form > input:nth-child(12) { animation-delay: 0.3s; }
+.new-session-form > label:nth-child(13),
+.new-session-form > input:nth-child(14) { animation-delay: 0.35s; }
+
+@keyframes fadeInField {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ========================================
+   Disabled State
+======================================== */
+.new-session-form select:disabled,
+.new-session-form input:disabled {
+  background: #f1f3f5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ========================================
+   Focus Within Effect
+======================================== */
+.new-session-form:focus-within {
+  box-shadow: 0 8px 28px rgba(102, 126, 234, 0.15);
+  border-color: #667eea;
+}
+
+/* ========================================
+   Responsive Design
+======================================== */
+@media (max-width: 768px) {
+  .new-session-container {
+    padding: 20px 16px;
+  }
+
+  .new-session-form {
+    padding: 24px 20px;
+  }
+
+  .submit-btn {
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+
+  .back-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+/* ========================================
+   Loading State (Optional Enhancement)
+======================================== */
+.submit-btn.loading {
+  position: relative;
+  color: transparent;
+  pointer-events: none;
+}
+
+.submit-btn.loading::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  left: 50%;
+  margin-left: -10px;
+  margin-top: -10px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

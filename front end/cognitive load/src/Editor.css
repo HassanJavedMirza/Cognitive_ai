@@ -1,0 +1,328 @@
+/* ========== GENERAL ========== */
+.admin-container {
+  min-height: 100vh;
+  font-family: "Poppins", sans-serif;
+  background: radial-gradient(circle at top right, #ffffff, #eef3ff, #f8faff);
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+/* ========== HEADER ========== */
+.admin-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(146, 153, 223, 0.88);
+  padding: 18px 45px;
+  box-shadow: 0px 8px 20px rgba(13, 71, 161, 0.12);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 3px solid #0d47a1;
+}
+
+/* LEFT */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-circle {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #1a237e, #0d47a1);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 1px;
+  box-shadow: 0px 6px 12px rgba(13, 71, 161, 0.3);
+}
+
+.brand-name {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1a237e;
+  margin: 0;
+}
+
+.brand-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #5f6368;
+}
+
+/* RIGHT */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.welcome-text {
+  font-size: 15px;
+  color: #121fb1;
+  font-weight: 500;
+}
+
+/* PROFILE */
+.profile-area {
+  position: relative;
+  cursor: pointer;
+}
+
+.profile-avatar {
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(135deg, #0d47a1, #1976d2);
+  color: rgb(104, 79, 252);
+  border-radius: 50%;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  box-shadow: 0 5px 12px rgba(13, 71, 161, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-avatar:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 20px rgba(13, 71, 161, 0.4);
+}
+
+/* DROPDOWN */
+.profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: 60px;
+  width: 200px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0px 10px 30px rgba(0,0,0,0.1);
+  overflow: hidden;
+  z-index: 9999; /* Make sure it's above other elements */
+}
+
+.profile-dropdown a {
+  display: block;
+  padding: 12px 15px;
+  font-size: 14px;
+  color: #1a237e;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.profile-dropdown a:hover {
+  background: #eef3ff;
+}
+
+/* ========== INTRO ========== */
+.admin-intro {
+  text-align: center;
+  color: #1a237e;
+  margin-top: 65px;
+}
+
+.admin-intro h2 {
+  font-size: 34px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.admin-intro p {
+  font-size: 16px;
+  color: #5f6368;
+  max-width: 650px;
+  margin: auto;
+}
+
+/* ========== NAVIGATION ========== */
+/* ========== NAVIGATION (UPGRADED) ========== */
+.admin-nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* cards are wider */
+  gap: 36px;
+  width: 100%;
+  max-width: 1350px; /* dashboard feels full-width */
+  padding: 40px 30px;
+  margin: 45px auto;
+}
+
+
+/* ========== NAV CARD (BIGGER + PREMIUM) ========== */
+.nav-card {
+  background: linear-gradient(135deg, #ffffff, #f4f7ff);
+  border-radius: 22px;
+  padding: 38px 28px;
+  min-height: 190px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 15px 30px rgba(13,71,161,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.45);
+  border: 2px solid rgba(13,71,161,0.08);
+  transition: all 0.35s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+
+/* subtle animated highlight */
+.nav-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(13,71,161,0.12), transparent 60%);
+  opacity: 0;
+  transition: 0.4s;
+}
+
+.nav-card:hover::before {
+  opacity: 1;
+}
+
+
+/* hover = lift */
+.nav-card:hover {
+  transform: translateY(-12px) scale(1.03);
+  border-color: rgba(13,71,161,0.35);
+  box-shadow:
+    0px 25px 45px rgba(13, 71, 161, 0.25),
+    inset 0px 1px 0 rgba(255,255,255,0.45);
+}
+
+
+/* TITLE */
+.nav-card h3 {
+  margin-bottom: 12px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #0d47a1;
+  letter-spacing: 0.6px;
+}
+
+
+/* DESCRIPTION */
+.nav-card p {
+  font-size: 15px;
+  color: #5f6368;
+  max-width: 260px;
+  margin: auto;
+}
+
+
+/* ACTVE STATE */
+.nav-card.active {
+  background: linear-gradient(135deg, #0d47a1, #1a237e);
+  color: white;
+  transform: scale(1.05);
+  box-shadow:
+    0 20px 50px rgba(13,71,161,0.35),
+    inset 0 2px 5px rgba(255,255,255,0.15);
+}
+
+.nav-card.active h3,
+.nav-card.active p {
+  color: white;
+}
+
+
+/* ========== CONTENT ========== */
+.admin-content {
+  background: white;
+  max-width: 1150px;
+  width: 90%;
+  padding: 35px;
+  border-radius: 20px;
+  box-shadow: 0px 14px 30px rgba(0,0,0,0.08);
+  margin-bottom: 70px;
+  transition: 0.3s ease;
+}
+
+/* header inside content */
+.admin-content h3 {
+  color: #0d47a1;
+  margin-bottom: 10px;
+}
+
+/* ========== FOOTER (OPTIONAL ADD-ON) ========== */
+.admin-footer {
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+  padding: 15px;
+  color: #5f6368;
+  background: #f8faff;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) 
+{
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 18px 20px;
+  }
+
+  .header-right {
+    margin-top: 10px;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .admin-intro h2 {
+    font-size: 26px;
+  }
+
+  .admin-content {
+    padding: 25px;
+  }
+
+  
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: 20px; /* Adds space on the right for logout button */
+}
+
+.welcome-text {
+  margin-right: 8px; /* Adds space between welcome text and avatar */
+}
+
+.logout-btn {
+  padding: 6px 16px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-left: 12px;
+  white-space: nowrap;
+    cursor: pointer; /* ✅ Should be clickable */
+  z-index: 100;
+}
+
+.logout-btn:hover {
+  background-color: #c82333;
+}
+
+
