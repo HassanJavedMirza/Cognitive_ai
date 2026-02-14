@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "./api/axiosInstance";
 
 function UploadResults() {
   const location = useLocation();
@@ -33,9 +33,8 @@ function UploadResults() {
     setLoading(true);
     try {
       // Get session details
-      const sessionRes = await axios.get(`http://localhost:8000/Sessions_by_sid/${sid}`);
-      if (sessionRes.data && sessionRes.data.length > 0)
-       {
+      const sessionRes = await api.get(`/Sessions_by_sid/${sid}`);
+      if (sessionRes.data && sessionRes.data.length > 0) {
 
         setSessionData(sessionRes.data[0]);
         console.log(sessionData);
@@ -45,8 +44,8 @@ function UploadResults() {
       // If edit mode, load existing results
       if (editMode) {
         try {
-          const resultsRes = await axios.get(
-            `http://localhost:8000/teacher_session_results_by_sid/${sid}`
+          const resultsRes = await api.get(
+            `/teacher_session_results_by_sid/${sid}`
           );
           if (resultsRes.data && !resultsRes.data.error) {
             setExistingData(resultsRes.data[0]);
@@ -115,8 +114,8 @@ function UploadResults() {
         formData.append("student_video", studentVideo);
       }
 
-      const response = await axios.post(
-        "http://localhost:8000/api/upload_video",
+      const response = await api.post(
+        "/api/upload_video",
         formData,
         {
           headers: {
@@ -351,8 +350,8 @@ function UploadResults() {
             {uploading
               ? "Uploading..."
               : editMode
-              ? "Update Files"
-              : "Upload Files"}
+                ? "Update Files"
+                : "Upload Files"}
           </button>
         </div>
       </div>

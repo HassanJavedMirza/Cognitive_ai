@@ -1,11 +1,11 @@
 // import { useEffect, useState, useCallback } from "react";
-// import axios from "axios";
+// import api from "./api/axiosInstance";
 // import { useNavigate } from "react-router-dom";
 // import "./Sessions.css";
 
 // function Sessions() {
 
-  
+
 //   const [sessions, setSessions] = useState([]);
 //   const [filteredSessions, setFilteredSessions] = useState([]);
 //   const [loading, setLoading] = useState(true);
@@ -13,7 +13,7 @@
 //   const [error, setError] = useState(null);
 //   const [editingSession, setEditingSession] = useState(null);
 //   const [editFormData, setEditFormData] = useState({});
-  
+
 //   // New state for response management
 //   const [responseData, setResponseData] = useState({});
 //   const [editingResponse, setEditingResponse] = useState(null);
@@ -21,27 +21,27 @@
 //     response: "",
 //     rating: ""
 //   });
-  
+
 //   const navigate = useNavigate();
 
 //   // Filter sessions function
 //   const filterSessions = useCallback((sessionsData, filterType) => {
 //     const today = new Date();
 //     today.setHours(0, 0, 0, 0);
-    
+
 //     const now = new Date();
-    
+
 //     if (filterType === "recent") {
 //       return sessionsData.filter(s => new Date(s.date) < today);
 //     }
-    
+
 //     if (filterType === "upcoming") {
 //       return sessionsData.filter(s => {
 //         const sessionDate = new Date(s.date);
 //         sessionDate.setHours(0, 0, 0, 0);
-        
+
 //         if (sessionDate > today) return true;
-        
+
 //         if (sessionDate.getTime() === today.getTime()) {
 //           if (s.end_time && typeof s.end_time === 'string') {
 //             try {
@@ -49,11 +49,11 @@
 //               if (timeParts.length >= 2) {
 //                 const hours = parseInt(timeParts[0]);
 //                 const minutes = parseInt(timeParts[1]);
-                
+
 //                 if (!isNaN(hours) && !isNaN(minutes)) {
 //                   const sessionEndTime = new Date();
 //                   sessionEndTime.setHours(hours, minutes, 0, 0);
-                  
+
 //                   return now < sessionEndTime;
 //                 }
 //               }
@@ -64,19 +64,19 @@
 //           }
 //           return true;
 //         }
-        
+
 //         return false;
 //       });
 //     }
-    
+
 //     return sessionsData;
 //   }, []);
 
 //   // Helper function to check response for a session
 //   const checkSessionResponse = async (sessionId) => {
 //     try {
-//       const response = await axios.get(
-//         `http://localhost:8000/sessions/${sessionId}/check-response?admin_id=1`
+//       const response = await api.get(
+//         `/sessions/${sessionId}/check-response?admin_id=1`
 //       );
 //       return response.data;
 //     } catch (err) {
@@ -88,7 +88,7 @@
 //   // Fetch all responses for sessions
 //   const fetchAllResponses = async (sessionsList) => {
 //     const responses = {};
-    
+
 //     for (const session of sessionsList) {
 //       try {
 //         const data = await checkSessionResponse(session.session_id);
@@ -97,7 +97,7 @@
 //         responses[session.session_id] = { has_response: false };
 //       }
 //     }
-    
+
 //     setResponseData(responses);
 //   };
 
@@ -106,17 +106,17 @@
 //     setLoading(true);
 //     setError(null);
 //     try {
-//       const response = await axios.get("http://localhost:8000/all_Sessions");
-      
+//       const response = await api.get("/all_Sessions");
+
 //       const today = new Date();
 //       today.setHours(0, 0, 0, 0);
 //       const now = new Date();
-      
+
 //       const sessionsWithResultStatus = await Promise.all(
 //         response.data.map(async (session) => {
 //           const sessionDate = new Date(session.date);
 //           sessionDate.setHours(0, 0, 0, 0);
-          
+
 //           let checkResults = false;
 //           if (sessionDate.getTime() === today.getTime()) {
 //             if (session.end_time && typeof session.end_time === 'string') {
@@ -125,11 +125,11 @@
 //                 if (timeParts.length >= 2) {
 //                   const hours = parseInt(timeParts[0]);
 //                   const minutes = parseInt(timeParts[1]);
-                  
+
 //                   if (!isNaN(hours) && !isNaN(minutes)) {
 //                     const sessionEndTime = new Date();
 //                     sessionEndTime.setHours(hours, minutes, 0, 0);
-                    
+
 //                     checkResults = now >= sessionEndTime;
 //                   }
 //                 }
@@ -138,19 +138,19 @@
 //               }
 //             }
 //           }
-          
+
 //           let hasResults = false;
 //           if (checkResults) {
 //             try {
-//               const resultResponse = await axios.get(
-//                 `http://localhost:8000/teacher_session_results_by_sid/${session.session_id}`
+//               const resultResponse = await api.get(
+//                 `/teacher_session_results_by_sid/${session.session_id}`
 //               );
 //               hasResults = !resultResponse.data.error && resultResponse.data.length > 0;
 //             } catch (err) {
 //               hasResults = false;
 //             }
 //           }
-          
+
 //           return {
 //             ...session,
 //             hasResults: hasResults,
@@ -158,10 +158,10 @@
 //           };
 //         })
 //       );
-      
+
 //       setSessions(sessionsWithResultStatus);
 //       setFilteredSessions(filterSessions(sessionsWithResultStatus, activeFilter));
-      
+
 //       await fetchAllResponses(sessionsWithResultStatus);
 //     } catch (err) {
 //       console.error("Error fetching sessions:", err);
@@ -199,9 +199,9 @@
 
 //   const deleteSession = async (sid) => {
 //     if (!window.confirm("Are you sure you want to delete this session?")) return;
-    
+
 //     try {
-//       await axios.delete(`http://localhost:8000/delete_session/${sid}`);
+//       await api.delete(`/delete_session/${sid}`);
 //       await fetchSessions();
 //       alert("Session deleted successfully!");
 //     } catch (err) {
@@ -227,13 +227,13 @@
 
 //   const handleEditSubmit = async (e) => {
 //     e.preventDefault();
-    
+
 //     try {
-//       const response = await axios.put(
-//         `http://localhost:8000/update_session/${editingSession.session_id}`,
+//       const response = await api.put(
+//         `/update_session/${editingSession.session_id}`,
 //         editFormData
 //       );
-      
+
 //       if (response.data.error) {
 //         alert(`Error: ${response.data.error}`);
 //       } else {
@@ -256,15 +256,15 @@
 //         response: responseForm.response,
 //         rating: responseForm.rating
 //       });
-      
-//       await axios.post(`http://localhost:8000/responses/?${params}`);
-      
+
+//       await api.post(`/responses/?${params}`);
+
 //       const updatedResponse = await checkSessionResponse(sessionId);
 //       setResponseData(prev => ({
 //         ...prev,
 //         [sessionId]: updatedResponse
 //       }));
-      
+
 //       alert("Response added successfully!");
 //       setResponseForm({ response: "", rating: "" });
 //       setEditingResponse(null);
@@ -280,15 +280,15 @@
 //         response: responseForm.response,
 //         rating: responseForm.rating
 //       });
-      
-//       await axios.put(`http://localhost:8000/responses/${responseId}?${params}`);
-      
+
+//       await api.put(`/responses/${responseId}?${params}`);
+
 //       const updatedResponse = await checkSessionResponse(sessionId);
 //       setResponseData(prev => ({
 //         ...prev,
 //         [sessionId]: updatedResponse
 //       }));
-      
+
 //       alert("Response updated successfully!");
 //       setResponseForm({ response: "", rating: "" });
 //       setEditingResponse(null);
@@ -300,15 +300,15 @@
 
 //   const deleteResponse = async (sessionId, responseId) => {
 //     if (!window.confirm("Are you sure you want to delete this response?")) return;
-    
+
 //     try {
-//       await axios.delete(`http://localhost:8000/responses/${responseId}`);
-      
+//       await api.delete(`/responses/${responseId}`);
+
 //       setResponseData(prev => ({
 //         ...prev,
 //         [sessionId]: { has_response: false }
 //       }));
-      
+
 //       alert("Response deleted successfully!");
 //     } catch (err) {
 //       console.error("Error deleting response:", err);
@@ -343,7 +343,7 @@
 //       alert("Please provide a valid rating (1-5)");
 //       return;
 //     }
-    
+
 //     if (editingResponse.type === "add") {
 //       addResponse(editingResponse.sessionId);
 //     } else {
@@ -353,7 +353,7 @@
 
 //   const renderRatingStars = (rating) => {
 //     if (!rating) return "No rating";
-    
+
 //     return (
 //       <div className="rating-display">
 //         <div className="rating-stars">
@@ -373,11 +373,11 @@
 
 //   const renderResponseStatus = (sessionId) => {
 //     const response = responseData[sessionId];
-    
+
 //     if (!response || !response.has_response) {
 //       return <span className="response-badge no-response">No Response</span>;
 //     }
-    
+
 //     return (
 //       <div className="response-status">
 //         <span className="response-badge has-response">Response Added</span>
@@ -542,7 +542,7 @@
 //           <div className="sessions-grid">
 //             {filteredSessions.map((session, index) => {
 //               const sessionResponse = responseData[session.session_id];
-              
+
 //               return (
 //                 <div 
 //                   key={session.session_id || index} 
@@ -551,9 +551,9 @@
 //                   <div className={`floating-response-indicator ${sessionResponse?.has_response ? 'has-response' : 'no-response'}`}>
 //                     {sessionResponse?.has_response ? '✓' : '+'}
 //                   </div>
-                  
+
 //                   {sessionResponse?.has_response && <div className="response-timeline" />}
-                  
+
 //                   <div className="session-header">
 //                     <div className="session-badge">
 //                       <div className="session-number">#{index + 1}</div>
@@ -562,7 +562,7 @@
 //                         {formatDate(session.date)}
 //                       </div>
 //                     </div>
-                    
+
 //                     <div className="session-response-status">
 //                       {renderResponseStatus(session.session_id)}
 //                     </div>
@@ -587,7 +587,7 @@
 //                         <span className="info-value">{session.venue}</span>
 //                       </div>
 //                     </div>
-                    
+
 //                     {sessionResponse?.has_response && sessionResponse.response && (
 //                       <div className="response-preview" style={{backgroundColor:"whitesmoke"}}>
 //                         <div className="response-preview-title">
@@ -613,11 +613,11 @@
 //                         >
 //                           📊 View Result
 //                         </button>
-                        
+
 //                         <div className="response-actions">
 //                           {renderResponseButtons(session.session_id, sessionResponse)}
 //                         </div>
-                        
+
 //                         <button
 //                           className="btn btn-delete"
 //                           onClick={() => deleteSession(session.session_id)}
@@ -635,7 +635,7 @@
 //                             📊 View Result
 //                           </button>
 //                         )}
-                        
+
 //                         {(!session.isPastToday || !session.hasResults) && (
 //                           <button
 //                             className="btn btn-edit"
@@ -644,7 +644,7 @@
 //                             ✏️ Edit
 //                           </button>
 //                         )}
-                        
+
 //                         <button
 //                           className="btn btn-delete"
 //                           onClick={() => deleteSession(session.session_id)}
@@ -837,16 +837,13 @@
 // }
 
 // export default Sessions;
-
-
 import { useEffect, useState, useCallback } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import api from "./api/axiosInstance";
 import "./Sessions.css";
 
 function Sessions() {
 
-  
+
   const [sessions, setSessions] = useState([]);
   const [filteredSessions, setFilteredSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -854,7 +851,7 @@ function Sessions() {
   const [error, setError] = useState(null);
   const [editingSession, setEditingSession] = useState(null);
   const [editFormData, setEditFormData] = useState({});
-  
+
   // New state for response management
   const [responseData, setResponseData] = useState({});
   const [editingResponse, setEditingResponse] = useState(null);
@@ -862,27 +859,27 @@ function Sessions() {
     response: "",
     score: ""
   });
-  
+
   const navigate = useNavigate();
 
   // Filter sessions function
   const filterSessions = useCallback((sessionsData, filterType) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const now = new Date();
-    
+
     if (filterType === "recent") {
       return sessionsData.filter(s => new Date(s.date) < today);
     }
-    
+
     if (filterType === "upcoming") {
       return sessionsData.filter(s => {
         const sessionDate = new Date(s.date);
         sessionDate.setHours(0, 0, 0, 0);
-        
+
         if (sessionDate > today) return true;
-        
+
         if (sessionDate.getTime() === today.getTime()) {
           if (s.end_time && typeof s.end_time === 'string') {
             try {
@@ -890,11 +887,11 @@ function Sessions() {
               if (timeParts.length >= 2) {
                 const hours = parseInt(timeParts[0]);
                 const minutes = parseInt(timeParts[1]);
-                
+
                 if (!isNaN(hours) && !isNaN(minutes)) {
                   const sessionEndTime = new Date();
                   sessionEndTime.setHours(hours, minutes, 0, 0);
-                  
+
                   return now < sessionEndTime;
                 }
               }
@@ -905,19 +902,19 @@ function Sessions() {
           }
           return true;
         }
-        
+
         return false;
       });
     }
-    
+
     return sessionsData;
   }, []);
 
   // Helper function to check response for a session
   const checkSessionResponse = async (sessionId) => {
     try {
-      const response = await axios.get(
-        `http://localhost:8000/sessions/${sessionId}/check-response?admin_id=1`
+      const response = await api.get(
+        `/sessions/${sessionId}/check-response?admin_id=1`
       );
       return response.data;
     } catch (err) {
@@ -929,7 +926,7 @@ function Sessions() {
   // Fetch all responses for sessions
   const fetchAllResponses = async (sessionsList) => {
     const responses = {};
-    
+
     for (const session of sessionsList) {
       try {
         const data = await checkSessionResponse(session.session_id);
@@ -938,7 +935,7 @@ function Sessions() {
         responses[session.session_id] = { has_response: false };
       }
     }
-    
+
     setResponseData(responses);
   };
 
@@ -947,17 +944,17 @@ function Sessions() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get("http://localhost:8000/all_Sessions");
-      
+      const response = await api.get("/all_Sessions");
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const now = new Date();
-      
+
       const sessionsWithResultStatus = await Promise.all(
         response.data.map(async (session) => {
           const sessionDate = new Date(session.date);
           sessionDate.setHours(0, 0, 0, 0);
-          
+
           let checkResults = false;
           if (sessionDate.getTime() === today.getTime()) {
             if (session.end_time && typeof session.end_time === 'string') {
@@ -966,11 +963,11 @@ function Sessions() {
                 if (timeParts.length >= 2) {
                   const hours = parseInt(timeParts[0]);
                   const minutes = parseInt(timeParts[1]);
-                  
+
                   if (!isNaN(hours) && !isNaN(minutes)) {
                     const sessionEndTime = new Date();
                     sessionEndTime.setHours(hours, minutes, 0, 0);
-                    
+
                     checkResults = now >= sessionEndTime;
                   }
                 }
@@ -979,12 +976,12 @@ function Sessions() {
               }
             }
           }
-          
+
           let hasResults = false;
           if (checkResults) {
             try {
-              const resultResponse = await axios.get(
-                `http://localhost:8000/teacher_session_results_by_sid/${session.session_id}`
+              const resultResponse = await api.get(
+                `/teacher_session_results_by_sid/${session.session_id}`
               );
 
               hasResults = !resultResponse.data.error && resultResponse.data.length > 0;
@@ -992,7 +989,7 @@ function Sessions() {
               hasResults = false;
             }
           }
-          
+
           return {
             ...session,
             hasResults: hasResults,
@@ -1000,10 +997,10 @@ function Sessions() {
           };
         })
       );
-      
+
       setSessions(sessionsWithResultStatus);
       setFilteredSessions(filterSessions(sessionsWithResultStatus, activeFilter));
-      
+
       await fetchAllResponses(sessionsWithResultStatus);
     } catch (err) {
       console.error("Error fetching sessions:", err);
@@ -1041,9 +1038,9 @@ function Sessions() {
 
   const deleteSession = async (sid) => {
     if (!window.confirm("Are you sure you want to delete this session?")) return;
-    
+
     try {
-      await axios.delete(`http://localhost:8000/delete_session/${sid}`);
+      await api.delete(`/delete_session/${sid}`);
       await fetchSessions();
       alert("Session deleted successfully!");
     } catch (err) {
@@ -1069,13 +1066,13 @@ function Sessions() {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
-      const response = await axios.put(
-        `http://localhost:8000/update_session/${editingSession.session_id}`,
+      const response = await api.put(
+        `/update_session/${editingSession.session_id}`,
         editFormData
       );
-      
+
       if (response.data.error) {
         alert(`Error: ${response.data.error}`);
       } else {
@@ -1098,15 +1095,15 @@ function Sessions() {
         response: responseForm.response,
         score: responseForm.score
       });
-      
-      await axios.post(`http://localhost:8000/responses/?${params}`);
-      
+
+      await api.post(`/responses/?${params}`);
+
       const updatedResponse = await checkSessionResponse(sessionId);
       setResponseData(prev => ({
         ...prev,
         [sessionId]: updatedResponse
       }));
-      
+
       alert("Response added successfully!");
       setResponseForm({ response: "", score: "" });
       setEditingResponse(null);
@@ -1122,15 +1119,15 @@ function Sessions() {
         response: responseForm.response,
         score: responseForm.score
       });
-      
-      await axios.put(`http://localhost:8000/responses/${responseId}?${params}`);
-      
+
+      await api.put(`/responses/${responseId}?${params}`);
+
       const updatedResponse = await checkSessionResponse(sessionId);
       setResponseData(prev => ({
         ...prev,
         [sessionId]: updatedResponse
       }));
-      
+
       alert("Response updated successfully!");
       setResponseForm({ response: "", score: "" });
       setEditingResponse(null);
@@ -1142,15 +1139,15 @@ function Sessions() {
 
   const deleteResponse = async (sessionId, responseId) => {
     if (!window.confirm("Are you sure you want to delete this response?")) return;
-    
+
     try {
-      await axios.delete(`http://localhost:8000/responses/${responseId}`);
-      
+      await api.delete(`/responses/${responseId}`);
+
       setResponseData(prev => ({
         ...prev,
         [sessionId]: { has_response: false }
       }));
-      
+
       alert("Response deleted successfully!");
     } catch (err) {
       console.error("Error deleting response:", err);
@@ -1185,7 +1182,7 @@ function Sessions() {
       alert("Please provide a valid score (1-5)");
       return;
     }
-    
+
     if (editingResponse.type === "add") {
       addResponse(editingResponse.sessionId);
     } else {
@@ -1195,13 +1192,13 @@ function Sessions() {
 
   const renderScoreStars = (score) => {
     if (!score) return "No score";
-    
+
     return (
       <div className="score-display">
         <div className="score-stars">
           {[...Array(5)].map((_, i) => (
-            <span 
-              key={i} 
+            <span
+              key={i}
               className={`star ${i < score ? "filled" : ""}`}
             >
               ★
@@ -1215,11 +1212,11 @@ function Sessions() {
 
   const renderResponseStatus = (sessionId) => {
     const response = responseData[sessionId];
-    
+
     if (!response || !response.has_response) {
       return <span className="response-badge no-response">No Response</span>;
     }
-    
+
     return (
       <div className="response-status">
         <span className="response-badge has-response">Response Added</span>
@@ -1244,7 +1241,7 @@ function Sessions() {
             onClick={() => deleteResponse(sessionId, sessionResponse.response_id)}
             title="Delete Response"
           >
-            <span>🗑️</span> Delete Response 
+            <span>🗑️</span> Delete Response
           </button>
         </>
       );
@@ -1263,10 +1260,10 @@ function Sessions() {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
@@ -1283,8 +1280,8 @@ function Sessions() {
           Cognitive AI — Session Dashboard
         </h1>
         <div className="header-actions">
-          <button 
-            className="logout-button" 
+          <button
+            className="logout-button"
             onClick={() => {
               if (window.confirm("Are you sure you want to logout?")) {
                 navigate("/");
@@ -1384,18 +1381,18 @@ function Sessions() {
           <div className="sessions-grid">
             {filteredSessions.map((session, index) => {
               const sessionResponse = responseData[session.session_id];
-              
+
               return (
-                <div 
-                  key={session.session_id || index} 
+                <div
+                  key={session.session_id || index}
                   className={`session-card ${sessionResponse?.has_response ? 'has-response' : 'no-response'}`}
                 >
                   <div className={`floating-response-indicator ${sessionResponse?.has_response ? 'has-response' : 'no-response'}`}>
                     {sessionResponse?.has_response ? '✓' : '+'}
                   </div>
-                  
+
                   {sessionResponse?.has_response && <div className="response-timeline" />}
-                  
+
                   <div className="session-header">
                     <div className="session-badge">
                       <div className="session-number">#{index + 1}</div>
@@ -1404,7 +1401,7 @@ function Sessions() {
                         {formatDate(session.date)}
                       </div>
                     </div>
-                    
+
                     {/* <div className="session-response-status">
                       {renderResponseStatus(session.session_id)}
                     </div> */}
@@ -1413,23 +1410,23 @@ function Sessions() {
                   <div className="session-body">
                     <div className="session-info-grid">
                       <div className="session-info-row">
-                        <span className="info-label" style={{color:"black"}}>👨‍🏫 Teacher</span>
-                        <span className="info-value" style={{color:"black"}}>{session.teacher_name}</span>
+                        <span className="info-label" style={{ color: "black" }}>👨‍🏫 Teacher</span>
+                        <span className="info-value" style={{ color: "black" }}>{session.teacher_name}</span>
                       </div>
                       <div className="session-info-row">
-                        <span className="info-label" style={{color:"black"}}>👨‍🎓 Student</span>
-                        <span className="info-value" style={{color:"black"}}>{session.student_name}</span>
+                        <span className="info-label" style={{ color: "black" }}>👨‍🎓 Student</span>
+                        <span className="info-value" style={{ color: "black" }}>{session.student_name}</span>
                       </div>
                       <div className="session-info-row">
-                        <span className="info-label" style={{color:"black"}}>📚 Course</span>
-                        <span className="info-value" style={{color:"black"}}>{session.course_name}</span>
+                        <span className="info-label" style={{ color: "black" }}>📚 Course</span>
+                        <span className="info-value" style={{ color: "black" }}>{session.course_name}</span>
                       </div>
                       <div className="session-info-row">
-                        <span className="info-label" style={{color:"black"}}>📍 Venue</span>
-                        <span className="info-value" style={{color:"black"}}>{session.venue}</span>
+                        <span className="info-label" style={{ color: "black" }}>📍 Venue</span>
+                        <span className="info-value" style={{ color: "black" }}>{session.venue}</span>
                       </div>
                     </div>
-                    
+
                     {/* {sessionResponse?.has_response && sessionResponse.response && (
                       <div className="response-preview" style={{backgroundColor:"whitesmoke"}}>
                         <div className="response-preview-title">
@@ -1455,17 +1452,17 @@ function Sessions() {
                         >
                           📊 View Results
                         </button> */}
-                            <button
+                        <button
                           className="btn btn-view"
                           onClick={() => showResult(session.session_id, session.teacher_name, session.student_name)}
                         >
                           📊 View in Editor
                         </button>
-                        
+
                         {/* <div className="response-actions">
                           {renderResponseButtons(session.session_id, sessionResponse)}
                         </div> */}
-                        
+
                         {/* <button
                           className="btn btn-delete"
                           onClick={() => deleteSession(session.session_id)}
@@ -1483,7 +1480,7 @@ function Sessions() {
                             📊 View Result
                           </button>
                         )}
-                        
+
 
 
                         {(!session.isPastToday || !session.hasResults) && (
@@ -1494,7 +1491,7 @@ function Sessions() {
                             ✏️ Edit
                           </button>
                         )}
-                        
+
                         <button
                           className="btn btn-delete"
                           onClick={() => deleteSession(session.session_id)}
@@ -1552,7 +1549,7 @@ function Sessions() {
                 <input
                   type="date"
                   value={editFormData.date}
-                  onChange={(e) => setEditFormData({...editFormData, date: e.target.value})}
+                  onChange={(e) => setEditFormData({ ...editFormData, date: e.target.value })}
                   required
                 />
               </div>
@@ -1561,7 +1558,7 @@ function Sessions() {
                 <label>📍 Venue</label>
                 <select
                   value={editFormData.venue}
-                  onChange={(e) => setEditFormData({...editFormData, venue: e.target.value})}
+                  onChange={(e) => setEditFormData({ ...editFormData, venue: e.target.value })}
                   required
                 >
                   {Array.from({ length: 14 }, (_, i) => `LT${i + 1}`).map((v) => (
@@ -1578,7 +1575,7 @@ function Sessions() {
                   <input
                     type="time"
                     value={editFormData.start_time}
-                    onChange={(e) => setEditFormData({...editFormData, start_time: e.target.value})}
+                    onChange={(e) => setEditFormData({ ...editFormData, start_time: e.target.value })}
                     required
                   />
                 </div>
@@ -1588,7 +1585,7 @@ function Sessions() {
                   <input
                     type="time"
                     value={editFormData.end_time}
-                    onChange={(e) => setEditFormData({...editFormData, end_time: e.target.value})}
+                    onChange={(e) => setEditFormData({ ...editFormData, end_time: e.target.value })}
                     required
                   />
                 </div>
@@ -1624,10 +1621,10 @@ function Sessions() {
                 <textarea
                   className="response-form-textarea"
                   value={responseForm.response}
-                  onChange={(e) => setResponseForm({...responseForm, response: e.target.value})}
+                  onChange={(e) => setResponseForm({ ...responseForm, response: e.target.value })}
                   placeholder="Enter your feedback about this session..."
                   rows="4"
-                  style={{color:"black"}}
+                  style={{ color: "black" }}
                 />
                 {responseForm.response && (
                   <div className="response-char-counter">
@@ -1644,7 +1641,7 @@ function Sessions() {
                       key={star}
                       type="button"
                       className={`score-star ${responseForm.score === star.toString() ? "selected" : ""}`}
-                      onClick={() => setResponseForm({...responseForm, score: star})}
+                      onClick={() => setResponseForm({ ...responseForm, score: star })}
                     >
                       ★
                     </button>
@@ -1654,7 +1651,7 @@ function Sessions() {
                     min="1"
                     max="5"
                     value={responseForm.score}
-                    onChange={(e) => setResponseForm({...responseForm, score: e.target.value})}
+                    onChange={(e) => setResponseForm({ ...responseForm, score: e.target.value })}
                     placeholder="Enter score 1-5"
                     className="score-number"
                   />
@@ -1663,16 +1660,16 @@ function Sessions() {
               </div>
 
               <div className="modal-actions">
-                <button 
-                  type="button" 
-                  className="btn-cancel" 
+                <button
+                  type="button"
+                  className="btn-cancel"
                   onClick={() => setEditingResponse(null)}
                 >
                   Cancel
                 </button>
-                <button 
-                  type="button" 
-                  className="btn-save" 
+                <button
+                  type="button"
+                  className="btn-save"
                   onClick={handleResponseSubmit}
                 >
                   💾 {editingResponse.type === "add" ? "Add Response" : "Update Response"}

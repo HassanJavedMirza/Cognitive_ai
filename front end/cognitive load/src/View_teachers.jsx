@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "./api/axiosInstance";
 import "./View_teachers.css";
 import { useNavigate } from "react-router-dom";
 
@@ -40,7 +40,7 @@ function View_teachers() {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get("http://localhost:8000/get_all_teachers", {
+      const res = await api.get("/get_all_teachers", {
         headers: { "Cache-Control": "no-store" },
       });
       console.log(res.data)
@@ -57,14 +57,14 @@ function View_teachers() {
     fetchTeachers();
   }, []);
 
-// Add this function to your TeacherDashboard component
-const compareSessionsButton = (teacher_id) => {
-  navigate('/TeacherCompareSessions', { // Use your actual route
-    state: {
-      teacher_id: teacher_id     
-    }
-  });
-};
+  // Add this function to your TeacherDashboard component
+  const compareSessionsButton = (teacher_id) => {
+    navigate('/TeacherCompareSessions', { // Use your actual route
+      state: {
+        teacher_id: teacher_id
+      }
+    });
+  };
 
   // --- View teacher sessions ---
   const viewTeacherSessions = async (teacher) => {
@@ -74,8 +74,8 @@ const compareSessionsButton = (teacher_id) => {
     setShowSessionsModal(true);
 
     try {
-      const res = await axios.get(
-        `http://localhost:8000/get_teachers_sessions_by_id/${teacher.teacher_id}`,
+      const res = await api.get(
+        `/get_teachers_sessions_by_id/${teacher.teacher_id}`,
         { headers: { "Cache-Control": "no-store" } }
       );
 
@@ -93,7 +93,7 @@ const compareSessionsButton = (teacher_id) => {
       setSessionsLoading(false);
     }
   };
- const showResult = (sid, teacherName, studentName) => {
+  const showResult = (sid, teacherName, studentName) => {
     navigate("/view_results", {
       state: {
         sid,
@@ -136,8 +136,8 @@ const compareSessionsButton = (teacher_id) => {
     // fetch courses for teacher
     setFetchingCourses(true);
     try {
-      const res = await axios.get(
-        `http://localhost:8000/get_courses_by_teacher?tid=${teacher.teacher_id}`
+      const res = await api.get(
+        `/get_courses_by_teacher?tid=${teacher.teacher_id}`
       );
       setCourses(res.data || []);
     } catch (err) {
@@ -174,9 +174,9 @@ const compareSessionsButton = (teacher_id) => {
 
     setFetchingStudents(true);
     try {
-     const res = await axios.get(
-  `http://localhost:8000/get_students_by_course?cid=${courseId}`
-);
+      const res = await api.get(
+        `/get_students_by_course?cid=${courseId}`
+      );
 
       setFilteredStudents(res.data || []);
     } catch (err) {
@@ -188,15 +188,15 @@ const compareSessionsButton = (teacher_id) => {
     }
   };
 
-const comapre_sessions=(tid)=>{
-   
-}
-  
+  const comapre_sessions = (tid) => {
+
+  }
+
   // --- Submit create session ---
   const submitSession = async (e) => {
     e.preventDefault();
     if (!selectedTeacher) return alert("No teacher selected.");
-    
+
     const { date, start_time, end_time, venue, course_id, student_id } = formData;
     if (!date || !start_time || !end_time || !venue || !course_id || !student_id) {
       return alert("Please fill all required fields.");
@@ -210,8 +210,8 @@ const comapre_sessions=(tid)=>{
 
     setSubmitting(true);
     try {
-      const res = await axios.post(
-        "http://localhost:8000/Create_new_Session",
+      const res = await api.post(
+        "/Create_new_Session",
         payload,
         { headers: { "Cache-Control": "no-store" } }
       );
@@ -236,24 +236,24 @@ const comapre_sessions=(tid)=>{
 
   // --- Date & time formatting helpers ---
   const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString("en-US", { 
-      month: "short", 
-      day: "numeric", 
-      year: "numeric" 
+    new Date(dateStr).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
     });
 
-    function goback(){
-      navigate("/AdminDashboard")
-    }
+  function goback() {
+    navigate("/AdminDashboard")
+  }
   const formatTime = (timeStr) => (timeStr ? String(timeStr).substring(0, 5) : "");
 
   return (
     <div className="teachers-container" aria-live="polite">
-<div class="teachers-header">
+      <div class="teachers-header">
 
-  <button class="back-btn" onClick={goback} style={{width:100, marginRight:100}}>Go Back</button>
-  <h2 class="teachers-title" style={{marginLeft:500, width:400, alignItems:"center", alignContent:"center"}}>All Teachers</h2>
-</div>
+        <button class="back-btn" onClick={goback} style={{ width: 100, marginRight: 100 }}>Go Back</button>
+        <h2 class="teachers-title" style={{ marginLeft: 500, width: 400, alignItems: "center", alignContent: "center" }}>All Teachers</h2>
+      </div>
 
 
       {loading ? (
@@ -296,9 +296,9 @@ const comapre_sessions=(tid)=>{
                   ➕ Create Session
                 </button>
                 <button
-                type="button"
+                  type="button"
 
-                onClick={() => compareSessionsButton(teacher.teacher_id)}
+                  onClick={() => compareSessionsButton(teacher.teacher_id)}
 
                 >
                   Comapre Sessions
@@ -483,7 +483,7 @@ const comapre_sessions=(tid)=>{
                           <span className="info-value">{session.venue}</span>
                         </div>
                         <button onClick={() => showResult(session.session_id, session.teacher_name, session.student_name)}>View Result </button>
-                    
+
 
                       </div>
                     </div>

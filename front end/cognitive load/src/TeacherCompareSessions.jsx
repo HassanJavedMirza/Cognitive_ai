@@ -1,4 +1,6 @@
 // import React, { useEffect, useState } from 'react';
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 // import { useParams, useLocation, useNavigate } from 'react-router-dom';
 // import axios from 'axios';
 // import {
@@ -59,7 +61,7 @@
     
 //     try {
 //       // 1. Fetch teacher details
-//       const teacherRes = await axios.get(`http://localhost:8000/get_one_teacher/${teacherId}`);
+//       const teacherRes = await axios.get(`${API_BASE}/get_one_teacher/${teacherId}`);
       
 //       if (teacherRes.data.error) {
 //         throw new Error(teacherRes.data.error);
@@ -68,7 +70,7 @@
 //       setTeacherInfo(teacherRes.data);
       
 //       // 2. Get teacher sessions with details
-//       const sessionsRes = await axios.get(`http://localhost:8000/teacher_sessions_with_details/${teacherId}`);
+//       const sessionsRes = await axios.get(`${API_BASE}/teacher_sessions_with_details/${teacherId}`);
       
 //       if (sessionsRes.data.error) {
 //         throw new Error(sessionsRes.data.error);
@@ -367,7 +369,7 @@
 
 //   const fetchEEGDataForSession = async (sessionId) => {
 //     try {
-//       const response = await axios.get(`http://localhost:8000/api/eeg-data/${sessionId}`);
+//       const response = await axios.get(`${API_BASE}/api/eeg-data/${sessionId}`);
       
 //       if (response.data.error) {
 //         console.log(`No EEG data for session ${sessionId}:`, response.data.error);
@@ -621,7 +623,7 @@
 //     setBrainwaveStats(null);
     
 //     try {
-//       const response = await axios.get(`http://localhost:8000/api/eeg-data/${sessionId}`);
+//       const response = await axios.get(`${API_BASE}/api/eeg-data/${sessionId}`);
       
 //       if (response.data.error) {
 //         setError(`No EEG data available for this session: ${response.data.error}`);
@@ -732,13 +734,13 @@
 //   const fetchSessionDetails = async (sessionId) => {
 //     try {
 //       // Get session details
-//       const sessionRes = await axios.get(`http://localhost:8000/Sessions_by_sid/${sessionId}`);
+//       const sessionRes = await axios.get(`${API_BASE}/Sessions_by_sid/${sessionId}`);
 //       const sessionData = Array.isArray(sessionRes.data) ? sessionRes.data[0] : sessionRes.data;
       
 //       // Get admin response
 //       let adminResponse = { rating: 0, response: 'No feedback provided' };
 //       try {
-//         const responseRes = await axios.get(`http://localhost:8000/sessions/${sessionId}/check-response`);
+//         const responseRes = await axios.get(`${API_BASE}/sessions/${sessionId}/check-response`);
 //         if (responseRes.data && responseRes.data.has_response) {
 //           adminResponse = responseRes.data;
 //         }
@@ -750,7 +752,7 @@
 //       let eegSummary = null;
 //       let hasEEG = false;
 //       try {
-//         const summaryRes = await axios.get(`http://localhost:8000/api/session_summary/${sessionId}`);
+//         const summaryRes = await axios.get(`${API_BASE}/api/session_summary/${sessionId}`);
 //         if (!summaryRes.data.error) {
 //           eegSummary = summaryRes.data;
 //           hasEEG = true;
@@ -1664,7 +1666,7 @@ function TeacherCompareSessionsPage() {
       console.log('Fetching teacher data:', teacherId);
       
       // 1. Fetch teacher details
-      const teacherRes = await axios.get(`http://localhost:8000/get_one_teacher/${teacherId}`);
+      const teacherRes = await axios.get(`${API_BASE}/get_one_teacher/${teacherId}`);
       
       if (teacherRes.data.error) {
         throw new Error(teacherRes.data.error);
@@ -1673,7 +1675,7 @@ function TeacherCompareSessionsPage() {
       setTeacherInfo(teacherRes.data);
       
       // 2. Get teacher sessions with details
-      const sessionsRes = await axios.get(`http://localhost:8000/teacher_sessions_with_details/${teacherId}`);
+      const sessionsRes = await axios.get(`${API_BASE}/teacher_sessions_with_details/${teacherId}`);
       
       if (sessionsRes.data.error) {
         throw new Error(sessionsRes.data.error);
@@ -1751,13 +1753,13 @@ function TeacherCompareSessionsPage() {
       console.log(`Fetching data for session ${sessionId}`);
       
       // 1. Get session details
-      const sessionRes = await axios.get(`http://localhost:8000/Sessions_by_sid/${sessionId}`);
+      const sessionRes = await axios.get(`${API_BASE}/Sessions_by_sid/${sessionId}`);
       const sessionData = Array.isArray(sessionRes.data) ? sessionRes.data[0] : sessionRes.data;
       
       // 2. Get admin response
       let adminResponse = { rating: 0, response: 'No feedback provided' };
       try {
-        const responseRes = await axios.get(`http://localhost:8000/sessions/${sessionId}/check-response`);
+        const responseRes = await axios.get(`${API_BASE}/sessions/${sessionId}/check-response`);
         if (responseRes.data && responseRes.data.has_response) {
           adminResponse = responseRes.data;
         }
@@ -1768,7 +1770,7 @@ function TeacherCompareSessionsPage() {
       // 3. Check EEG availability
       let hasEEG = false;
       try {
-        const summaryRes = await axios.get(`http://localhost:8000/api/session_summary/${sessionId}`);
+        const summaryRes = await axios.get(`${API_BASE}/api/session_summary/${sessionId}`);
         if (!summaryRes.data.error) {
           hasEEG = true;
         }
@@ -1829,7 +1831,7 @@ function TeacherCompareSessionsPage() {
 
   const fetchEEGDataForSession = async (sessionId) => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/eeg-data/${sessionId}`);
+      const response = await axios.get(`${API_BASE}/api/eeg-data/${sessionId}`);
       
       if (response.data.error) {
         return { error: response.data.error };

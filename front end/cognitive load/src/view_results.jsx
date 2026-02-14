@@ -1,5 +1,5 @@
-
 import { useState, useRef, useEffect, useCallback } from "react";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./view_results.css";
 import SessionSummary from './SessionSummary';
@@ -27,39 +27,39 @@ if (styleSheet && !Array.from(styleSheet.cssRules).some(rule => rule.name === 'f
 }
 
 const ViewResults = () => {
-  
+
   const location = useLocation();
   const navigate = useNavigate();
 
   const sessionId = location.state?.sid;
   const teacherName = location.state?.teacherName;
   const studentName = location.state?.studentName;
-  
-  const [highaplha,sethighalpha]=useState("");
-  const [highbeta,sethighbeta]=useState("");
-  const [highgamma,sethighgamma]=useState("");
-  const [highdelta,sethighdelta]=useState("");
-  const [hightheta,sethightheta]=useState("");
 
-  const [modalpha,setmodealpha]=useState("");
-  const [modbeta,setmodebeta]=useState("");
-  const [modgamma,setmmodegamma]=useState("");
-  const [modedelta,setmodedelta]=useState("");
-  const [modetheta,setmodetheta]=useState("");
+  const [highaplha, sethighalpha] = useState("");
+  const [highbeta, sethighbeta] = useState("");
+  const [highgamma, sethighgamma] = useState("");
+  const [highdelta, sethighdelta] = useState("");
+  const [hightheta, sethightheta] = useState("");
 
-  const[lowalpha,setlowaplpha]=useState("");
-  const[lowbeta,setlowbeta]=useState("");
-  const[lowgamma,setlowgamma]=useState("");
-  const[lowdelta,setlowdelta]=useState("");
-  const[lowtheta,setlowtheta]=useState("");
-  
+  const [modalpha, setmodealpha] = useState("");
+  const [modbeta, setmodebeta] = useState("");
+  const [modgamma, setmmodegamma] = useState("");
+  const [modedelta, setmodedelta] = useState("");
+  const [modetheta, setmodetheta] = useState("");
 
-  const [minhigh,setminhigh]=useState("");
-  const [minlow,setminlow]=useState("");
-  const [minmoderate,setminmoderate]=useState("");
-  const [maxhigh,setmaxhigh]=useState("");
-  const [maxmoderate,setmaxmoderate]=useState(""); 
-  const [maxlow,setmaxlow]=useState("");
+  const [lowalpha, setlowaplpha] = useState("");
+  const [lowbeta, setlowbeta] = useState("");
+  const [lowgamma, setlowgamma] = useState("");
+  const [lowdelta, setlowdelta] = useState("");
+  const [lowtheta, setlowtheta] = useState("");
+
+
+  const [minhigh, setminhigh] = useState("");
+  const [minlow, setminlow] = useState("");
+  const [minmoderate, setminmoderate] = useState("");
+  const [maxhigh, setmaxhigh] = useState("");
+  const [maxmoderate, setmaxmoderate] = useState("");
+  const [maxlow, setmaxlow] = useState("");
 
 
   const [results, setResults] = useState([]);
@@ -68,7 +68,7 @@ const ViewResults = () => {
   const [loading, setLoading] = useState(true);
   const [showFilterSidebar, setShowFilterSidebar] = useState(false);
   const [showSessionSummary, setShowSessionSummary] = useState(false);
-  
+
   // Response/Rating state variables
   const [showResponseSection, setShowResponseSection] = useState(false);
   const [responseText, setResponseText] = useState("");
@@ -85,7 +85,7 @@ const ViewResults = () => {
     low: true,
     "very low": true,
   });
-  
+
   // Wave filter states
   const [selectedWaves, setSelectedWaves] = useState({
     delta: true,
@@ -119,8 +119,8 @@ const ViewResults = () => {
   const [mainIsPlaying, setMainIsPlaying] = useState(false);
   const [mainCurrentTime, setMainCurrentTime] = useState(0);
   // ["very high", "high", "moderate", "low", "very low"]
-  const labelOrder = ["high","medium","low"];
-  const order=["high","moderate","low"];
+  const labelOrder = ["high", "medium", "low"];
+  const order = ["high", "moderate", "low"];
   const BUFFER_SECONDS = 2;
 
   // Wave color mapping
@@ -138,9 +138,9 @@ const ViewResults = () => {
       try {
         const userRole = localStorage.getItem('userRole');
         const userId = localStorage.getItem('userId');
-        
+
         if (userRole === 'admin' && userId) {
-          const res = await fetch(`http://localhost:8000/admins_by_id/${userId}`);
+          const res = await fetch(`${API_BASE}/admins_by_id/${userId}`);
           const data = await res.json();
           if (data && data.name) {
             setAdminName(data.name);
@@ -150,44 +150,44 @@ const ViewResults = () => {
         console.error("Error fetching admin name:", error);
       }
     };
-    
+
     fetchAdminName();
   }, []);
 
   // Fetch existing responses for this session
   useEffect(() => {
     if (!sessionId) return;
-    
+
     const fetchExistingResponses = async () => {
       setAdminResponsesLoading(true);
       try {
         // First check if there's a response for this specific session
         const checkRes = await fetch(
-          `http://localhost:8000/sessions/${sessionId}/check-response`
+          `${API_BASE}/sessions/${sessionId}/check-response`
         );
-        
+
         const checkData = await checkRes.json();
-        
+
         if (checkData.has_response) {
           // If there's a response, add it to the array
           setExistingResponses([checkData]);
         } else {
           setExistingResponses([]);
         }
-        
+
         // Also fetch all responses to show in the list
         const allRes = await fetch(
-          "http://localhost:8000/responses/"
+          "${API_BASE}/responses/"
         );
-        
+
         const allData = await allRes.json();
-        
+
         if (allData.responses && allData.responses.length > 0) {
           // Filter responses for this session
           const sessionResponses = allData.responses.filter(
             response => response.session_id === sessionId
           );
-          
+
           if (sessionResponses.length > 0) {
             setExistingResponses(sessionResponses);
           }
@@ -198,7 +198,7 @@ const ViewResults = () => {
         setAdminResponsesLoading(false);
       }
     };
-    
+
     fetchExistingResponses();
   }, [sessionId]);
 
@@ -209,7 +209,7 @@ const ViewResults = () => {
     if (!sessionId) return;
     const sessiondetails = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/Sessions_by_sid/${sessionId}`);
+        const res = await fetch(`${API_BASE}/Sessions_by_sid/${sessionId}`);
         const details = await res.json();
         console.log("Session details:", details);
       } catch (error) {
@@ -226,7 +226,7 @@ const ViewResults = () => {
       setLoading(true);
       try {
         const res = await fetch(
-          `http://localhost:8000/teacher_session_results_by_sid/${sessionId}`
+          `${API_BASE}/teacher_session_results_by_sid/${sessionId}`
         );
         const data = await res.json();
         if (!data.error) {
@@ -245,11 +245,11 @@ const ViewResults = () => {
   // Fetch EEG CSV - Improved with auto-range detection
   useEffect(() => {
     const eegPath = results[0]?.eeg_path;
-    
+
     if (!eegPath) return;
 
     const fetchEEG = () => {
-      fetch(`http://localhost:8000/serve_csv?path=${eegPath}&t=${Date.now()}`)
+      fetch(`${API_BASE}/serve_csv?path=${eegPath}&t=${Date.now()}`)
         .then((res) => res.text())
         .then((text) => {
           const lines = text.split("\n");
@@ -320,8 +320,8 @@ const ViewResults = () => {
             if (gamma < ranges.gamma.min) ranges.gamma.min = gamma;
             if (gamma > ranges.gamma.max) ranges.gamma.max = gamma;
 
-            data.push({ 
-              time: relativeTime, 
+            data.push({
+              time: relativeTime,
               label,
               delta,
               theta,
@@ -336,14 +336,14 @@ const ViewResults = () => {
           Object.keys(ranges).forEach(band => {
             const min = ranges[band].min === Infinity ? 0 : ranges[band].min;
             const max = ranges[band].max === -Infinity ? 1000 : ranges[band].max;
-            
+
             // Round min down to nearest nice number
             let niceMin = 0;
             if (min > 0) {
               const magnitude = Math.pow(10, Math.floor(Math.log10(min)));
               niceMin = Math.floor(min / magnitude) * magnitude;
             }
-            
+
             // Round max up to nearest nice number
             let niceMax = 1000;
             if (max > 0) {
@@ -352,7 +352,7 @@ const ViewResults = () => {
               // Ensure we have some padding
               niceMax = Math.max(niceMax * 1.1, niceMin * 2);
             }
-            
+
             processedRanges[band] = { min: niceMin, max: niceMax };
           });
 
@@ -360,10 +360,10 @@ const ViewResults = () => {
           // Initialize wave ranges with detected ranges
           setWaveRanges(processedRanges);
           setEegData(data);
-          
+
           console.log("📊 Auto-detected EEG ranges:", processedRanges);
           console.log("📈 EEG data points loaded:", data.length);
-          console.log("⏱️ Max EEG time:", data.length > 0 ? data[data.length-1].time : 0);
+          console.log("⏱️ Max EEG time:", data.length > 0 ? data[data.length - 1].time : 0);
         })
         .catch((err) => console.error("Error loading EEG:", err));
     };
@@ -383,18 +383,18 @@ const ViewResults = () => {
         setVideoDuration(eegDuration);
         return;
       }
-      
+
       // Priority 2: Use session metadata
       if (results[0]?.duration) {
         console.log("📊 Using session metadata duration:", results[0].duration, "seconds");
         setVideoDuration(results[0].duration);
         return;
       }
-      
+
       // Priority 3: Try to get from video elements
       const studentVid = mainStudentRef.current;
       const teacherVid = mainTeacherRef.current;
-      
+
       if (studentVid?.duration && isFinite(studentVid.duration) && studentVid.duration > 0) {
         console.log("📊 Using student video duration:", studentVid.duration, "seconds");
         setVideoDuration(studentVid.duration);
@@ -407,28 +407,28 @@ const ViewResults = () => {
         setVideoDuration(180);
       }
     };
-    
+
     determineDuration();
-    
+
     // Also listen for video metadata
     const studentVid = mainStudentRef.current;
     const teacherVid = mainTeacherRef.current;
-    
+
     const handleLoadedMetadata = () => determineDuration();
-    
+
     if (studentVid) {
       studentVid.addEventListener("loadedmetadata", handleLoadedMetadata);
     }
     if (teacherVid) {
       teacherVid.addEventListener("loadedmetadata", handleLoadedMetadata);
     }
-    
+
     return () => {
       if (studentVid) studentVid.removeEventListener("loadedmetadata", handleLoadedMetadata);
       if (teacherVid) teacherVid.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
   }, [eegData, results]);
-  
+
   // Main video current time
   useEffect(() => {
     if (!mainIsPlaying) return;
@@ -436,7 +436,7 @@ const ViewResults = () => {
       if (mainStudentRef.current) {
         const currentTime = mainStudentRef.current.currentTime;
         setMainCurrentTime(currentTime);
-        
+
         // Sync teacher video if available
         if (mainTeacherRef.current && Math.abs(mainTeacherRef.current.currentTime - currentTime) > 0.1) {
           mainTeacherRef.current.currentTime = currentTime;
@@ -474,14 +474,14 @@ const ViewResults = () => {
     // Merge overlapping segments
     const mergedSegments = [];
     const sortedSegments = individualSegments.sort((a, b) => a.start - b.start);
-    
+
     sortedSegments.forEach(seg => {
       const last = mergedSegments[mergedSegments.length - 1];
       if (last && seg.start <= last.end) {
         last.end = Math.max(last.end, seg.end);
         last.labels = [...new Set([...last.labels || [last.label], seg.label])];
       } else {
-        mergedSegments.push({...seg, labels: [seg.label]});
+        mergedSegments.push({ ...seg, labels: [seg.label] });
       }
     });
 
@@ -493,15 +493,15 @@ const ViewResults = () => {
   // ✅ FIXED: Get consistent time base for all graphs
   const getTimeBase = useCallback(() => {
     if (eegData.length === 0) return videoDuration || 180;
-    
+
     // Always use EEG timeline for consistency
     const maxEEGTime = eegData[eegData.length - 1].time;
     return maxEEGTime;
   }, [eegData, videoDuration]);
 
   const formatValue = (val) => {
-    if (val >= 1000000) return `${(val/1000000).toFixed(1)}M`;
-    if (val >= 1000) return `${(val/1000).toFixed(0)}k`;
+    if (val >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
+    if (val >= 1000) return `${(val / 1000).toFixed(0)}k`;
     return val.toFixed(0);
   };
 
@@ -509,7 +509,7 @@ const ViewResults = () => {
     // Get the maximum range from selected waves for Y-axis
     let maxValue = 1000;
     let minValue = 0;
-    
+
     Object.keys(selectedWaves).forEach(band => {
       if (selectedWaves[band]) {
         const range = waveRanges[band];
@@ -517,33 +517,33 @@ const ViewResults = () => {
         if (range.min < minValue) minValue = range.min;
       }
     });
-    
+
     // Use logarithmic scale for labels
     const labels = [];
     const minLog = Math.log10(Math.max(1, minValue));
     const maxLog = Math.log10(Math.max(10, maxValue));
-    
+
     // Generate 6 labels on log scale
     for (let i = 0; i <= 5; i++) {
       const logVal = minLog + (maxLog - minLog) * (i / 5);
       const val = Math.pow(10, logVal);
       labels.push(formatValue(val));
     }
-    
+
     return labels.reverse(); // Reverse so highest is at top
   };
 
   const mapValueToY = (value, band) => {
     const { min, max } = waveRanges[band] || { min: 0, max: 1000 };
-    
+
     if (value < min) value = min;
     if (value > max) value = max;
-    
+
     // Use logarithmic scale for wide ranges
     const minLog = Math.log10(Math.max(1, min));
     const maxLog = Math.log10(Math.max(10, max));
     const valueLog = Math.log10(Math.max(1, value));
-    
+
     const normalized = (valueLog - minLog) / (maxLog - minLog);
     // Return inverted value (0 at bottom, 100 at top in SVG)
     return 100 - (Math.max(0, Math.min(1, normalized)) * 100);
@@ -552,9 +552,9 @@ const ViewResults = () => {
   // ✅ FIXED: Use consistent time base for brainwave points
   const buildPoints = (key) => {
     if (eegData.length === 0 || !selectedWaves[key]) return "";
-    
+
     const timeBase = getTimeBase();
-    
+
     return eegData.map(p => {
       const x = (p.time / timeBase) * 100;
       const y = mapValueToY(p[key], key);
@@ -618,7 +618,7 @@ const ViewResults = () => {
     const labels = [];
     const timeBase = getTimeBase();
     const effectiveDuration = duration || timeBase;
-    
+
     if (isNaN(effectiveDuration) || effectiveDuration <= 0) {
       // Return minimal labels if duration is invalid
       return [
@@ -626,13 +626,13 @@ const ViewResults = () => {
         { position: 100, time: "0s", showFullLabel: true, isTickMark: false }
       ];
     }
-    
+
     // For very short durations (≤ 10 seconds), show every second
     if (effectiveDuration <= 10) {
       for (let t = 0; t <= Math.ceil(effectiveDuration); t++) {
         const absoluteTime = startTime + t;
-        labels.push({ 
-          position: (t / effectiveDuration) * 100, 
+        labels.push({
+          position: (t / effectiveDuration) * 100,
           time: formatTimeSeconds(absoluteTime),
           showFullLabel: true,
           isTickMark: false
@@ -644,8 +644,8 @@ const ViewResults = () => {
       const interval = 5;
       for (let t = 0; t <= effectiveDuration; t += interval) {
         const absoluteTime = startTime + t;
-        labels.push({ 
-          position: (t / effectiveDuration) * 100, 
+        labels.push({
+          position: (t / effectiveDuration) * 100,
           time: formatTimeSeconds(absoluteTime),
           showFullLabel: true,
           isTickMark: false
@@ -654,8 +654,8 @@ const ViewResults = () => {
       // Ensure last point is included
       const lastLabel = labels[labels.length - 1];
       if (lastLabel.position < 100) {
-        labels.push({ 
-          position: 100, 
+        labels.push({
+          position: 100,
           time: formatTimeSeconds(startTime + effectiveDuration),
           showFullLabel: true,
           isTickMark: false
@@ -667,8 +667,8 @@ const ViewResults = () => {
       const interval = 10;
       for (let t = 0; t <= effectiveDuration; t += interval) {
         const absoluteTime = startTime + t;
-        labels.push({ 
-          position: (t / effectiveDuration) * 100, 
+        labels.push({
+          position: (t / effectiveDuration) * 100,
           time: formatTimeForGraph(absoluteTime),
           showFullLabel: true,
           isTickMark: false
@@ -677,8 +677,8 @@ const ViewResults = () => {
       // Ensure last point is included
       const lastLabel = labels[labels.length - 1];
       if (lastLabel.position < 100) {
-        labels.push({ 
-          position: 100, 
+        labels.push({
+          position: 100,
           time: formatTimeForGraph(startTime + effectiveDuration),
           showFullLabel: true,
           isTickMark: false
@@ -690,8 +690,8 @@ const ViewResults = () => {
       const interval = 30;
       for (let t = 0; t <= effectiveDuration; t += interval) {
         const absoluteTime = startTime + t;
-        labels.push({ 
-          position: (t / effectiveDuration) * 100, 
+        labels.push({
+          position: (t / effectiveDuration) * 100,
           time: formatTimeForGraph(absoluteTime),
           showFullLabel: true,
           isTickMark: false
@@ -700,15 +700,15 @@ const ViewResults = () => {
       // Ensure last point is included
       const lastLabel = labels[labels.length - 1];
       if (lastLabel.position < 100) {
-        labels.push({ 
-          position: 100, 
+        labels.push({
+          position: 100,
           time: formatTimeForGraph(startTime + effectiveDuration),
           showFullLabel: true,
           isTickMark: false
         });
       }
     }
-    
+
     return labels;
   };
 
@@ -769,7 +769,7 @@ const ViewResults = () => {
         rating: rating > 0 ? rating : null
       };
 
-      const res = await fetch("http://localhost:8000/responses/", {
+      const res = await fetch("${API_BASE}/responses/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -779,7 +779,7 @@ const ViewResults = () => {
 
       if (res.ok) {
         const data = await res.json();
-        
+
         // Add the new response to existing responses
         const newResponse = {
           response_id: data.response_id,
@@ -790,16 +790,16 @@ const ViewResults = () => {
           created_at: new Date().toISOString(),
           admin_name: adminName || "Admin"
         };
-        
+
         setExistingResponses([...existingResponses, newResponse]);
-        
+
         // Clear form
         setResponseText("");
         setRating(0);
-        
+
         // Show success message
         alert("Response submitted successfully!");
-        
+
         // Optionally hide the response section
         setShowResponseSection(false);
       } else {
@@ -821,7 +821,7 @@ const ViewResults = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:8000/responses/${responseId}`, {
+      const res = await fetch(`${API_BASE}/responses/${responseId}`, {
         method: "DELETE",
       });
 
@@ -846,7 +846,7 @@ const ViewResults = () => {
         rating: updatedRating
       };
 
-      const res = await fetch(`http://localhost:8000/responses/${responseId}`, {
+      const res = await fetch(`${API_BASE}/responses/${responseId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -856,8 +856,8 @@ const ViewResults = () => {
 
       if (res.ok) {
         // Update the response in the list
-        setExistingResponses(existingResponses.map(r => 
-          r.response_id === responseId 
+        setExistingResponses(existingResponses.map(r =>
+          r.response_id === responseId
             ? { ...r, response: updatedText, rating: updatedRating }
             : r
         ));
@@ -875,19 +875,19 @@ const ViewResults = () => {
   const handleGraphClick = useCallback((e) => {
     // Prevent event bubbling if needed
     e.stopPropagation();
-    
+
     // Get the clicked SVG container
     const container = e.currentTarget;
     const rect = container.getBoundingClientRect();
-    
+
     // Calculate click position relative to container
     const clickX = e.clientX - rect.left;
     const clickPercent = (clickX / rect.width) * 100;
-    
+
     // Convert percentage to time
     const timeBase = getTimeBase();
     const clickedTime = (clickPercent / 100) * timeBase;
-    
+
     // Ensure time is within bounds
     if (clickedTime >= 0 && clickedTime <= timeBase) {
       // Jump videos to clicked time
@@ -897,10 +897,10 @@ const ViewResults = () => {
       if (mainTeacherRef.current) {
         mainTeacherRef.current.currentTime = clickedTime;
       }
-      
+
       // Update state
       setMainCurrentTime(clickedTime);
-      
+
       // Optional: Add a temporary visual indicator
       const indicator = document.createElement('div');
       indicator.style.position = 'absolute';
@@ -912,18 +912,18 @@ const ViewResults = () => {
       indicator.style.zIndex = '100';
       indicator.style.pointerEvents = 'none';
       indicator.style.animation = 'fadeOut 0.5s forwards';
-      
+
       // Add to the clicked element
       container.style.position = 'relative';
       container.appendChild(indicator);
-      
+
       // Remove after animation
       setTimeout(() => {
         if (indicator.parentNode) {
           indicator.parentNode.removeChild(indicator);
         }
       }, 500);
-      
+
       console.log(`Jumped to ${formatTime(clickedTime)} (${clickPercent.toFixed(1)}%)`);
     }
   }, [getTimeBase]);
@@ -932,7 +932,7 @@ const ViewResults = () => {
   const handleLabelClick = (position) => {
     const timeBase = getTimeBase();
     const clickedTime = (position / 100) * timeBase;
-    
+
     if (clickedTime >= 0 && clickedTime <= timeBase) {
       if (mainStudentRef.current) {
         mainStudentRef.current.currentTime = clickedTime;
@@ -1001,8 +1001,8 @@ const ViewResults = () => {
     }
     setMainIsPlaying(!mainIsPlaying);
   };
-  const change_eeg_values=()=>{
-    
+  const change_eeg_values = () => {
+
 
   }
   const handleGoBack = () => navigate(-1);
@@ -1024,20 +1024,20 @@ const ViewResults = () => {
   // Function to play all segments sequentially
   const playAllSegments = () => {
     if (segments.length === 0) return;
-    
+
     const playSegment = (index) => {
       if (index >= segments.length) {
         setMainIsPlaying(false);
         return;
       }
-      
+
       const seg = segments[index];
       if (mainStudentRef.current) {
         mainStudentRef.current.currentTime = seg.start;
         mainStudentRef.current.play();
         setMainIsPlaying(true);
         setMainCurrentTime(seg.start);
-        
+
         // Set timeout to play next segment
         const duration = seg.end - seg.start;
         setTimeout(() => {
@@ -1045,18 +1045,18 @@ const ViewResults = () => {
         }, duration * 1000);
       }
     };
-    
+
     playSegment(0);
   };
 
-  
+
 
   // Function to go to previous segment
   const goToPreviousSegment = () => {
     const currentSegmentIndex = segments.findIndex(
       seg => mainCurrentTime >= seg.start && mainCurrentTime <= seg.end
     );
-    
+
     if (currentSegmentIndex > 0) {
       jumpToSegment(segments[currentSegmentIndex - 1]);
     }
@@ -1067,7 +1067,7 @@ const ViewResults = () => {
     const currentSegmentIndex = segments.findIndex(
       seg => mainCurrentTime >= seg.start && mainCurrentTime <= seg.end
     );
-    
+
     if (currentSegmentIndex >= 0 && currentSegmentIndex < segments.length - 1) {
       jumpToSegment(segments[currentSegmentIndex + 1]);
     }
@@ -1180,10 +1180,10 @@ const ViewResults = () => {
           {showFilterSidebar ? "✕ Close" : "⚙ Filters"}
         </button>
       </div>
-      
+
       {/* Session Summary - Conditionally shown */}
       {showSessionSummary && (
-        <div style={{ 
+        <div style={{
           marginBottom: '20px',
           animation: 'fadeIn 0.3s ease-in-out'
         }}>
@@ -1280,7 +1280,7 @@ const ViewResults = () => {
       {/* FILTER SIDEBAR - COMBINED (Cognitive + Wave Filters) */}
       <div className={`filter-sidebar ${showFilterSidebar ? "open" : ""}`}>
         <h3>Filters</h3>
-        
+
         {/* Cognitive Load Level Filters */}
         <div className="filter-section">
           <h4 style={{ marginBottom: '10px', color: '#3b82f6', borderBottom: '1px solid #333', paddingBottom: '5px' }}>
@@ -1303,7 +1303,7 @@ const ViewResults = () => {
                   checked={selectedFilters[label]}
                   onChange={() => handleFilterToggle(label)}
                 />
-                <span className="capitalize" style={{ 
+                <span className="capitalize" style={{
                   color: getLabelColor(label),
                   fontWeight: 'bold'
                 }}>
@@ -1328,7 +1328,7 @@ const ViewResults = () => {
               />
               <span>Show All Waves</span>
             </label>
-            
+
             {Object.keys(selectedWaves).map((wave) => (
               <div key={wave} style={{ marginBottom: '10px' }}>
                 <label className="filter-checkbox" style={{ marginBottom: '5px' }}>
@@ -1337,7 +1337,7 @@ const ViewResults = () => {
                     checked={selectedWaves[wave]}
                     onChange={() => handleWaveToggle(wave)}
                   />
-                  <span className="capitalize" style={{ 
+                  <span className="capitalize" style={{
                     color: waveColors[wave],
                     fontWeight: 'bold',
                     textTransform: 'uppercase'
@@ -1345,11 +1345,11 @@ const ViewResults = () => {
                     {wave}
                   </span>
                 </label>
-                
+
                 {selectedWaves[wave] && (
-                  <div style={{ 
-                    padding: '8px', 
-                    background: '#eee5e5ff', 
+                  <div style={{
+                    padding: '8px',
+                    background: '#eee5e5ff',
                     borderRadius: '4px',
                     fontSize: '30px',
                     marginLeft: '20px'
@@ -1370,7 +1370,7 @@ const ViewResults = () => {
                           color: 'white',
                           borderRadius: '3px',
                           fontSize: '10px'
-                          
+
                         }}
                       />
                     </div>
@@ -1395,7 +1395,7 @@ const ViewResults = () => {
                 )}
               </div>
             ))}
-            
+
             {/* <button
               onClick={handleResetRanges}
               style={{
@@ -1414,21 +1414,21 @@ const ViewResults = () => {
               🔄 Reset to Auto-detected Ranges
             </button> */}
           </div>
-          
+
           {/* Active Waves Display */}
-          <div style={{ 
-            marginTop: '15px', 
-            padding: '10px', 
-            background: '#2a2a2a', 
+          <div style={{
+            marginTop: '15px',
+            padding: '10px',
+            background: '#2a2a2a',
             borderRadius: '6px',
             fontSize: '12px'
           }}>
             <strong style={{ display: 'block', marginBottom: '8px', color: '#8b5cf6' }}>
               Active Waves:
             </strong>
-            <div style={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
               gap: '6px',
             }}>
               {Object.keys(selectedWaves).map(wave => {
@@ -1509,7 +1509,7 @@ const ViewResults = () => {
             </div>
           </div>
         )}
-        
+
         <button className="done-btn" onClick={() => setShowFilterSidebar(false)}>
           Done
         </button>
@@ -1528,7 +1528,7 @@ const ViewResults = () => {
           <h3 className="panel-title">Teacher: {teacherName}</h3>
           <video
             ref={mainTeacherRef}
-            src={`http://localhost:8000/serve_video?path=${data.teacher_path}`}
+            src={`${API_BASE}/serve_video?path=${data.teacher_path}`}
             className="small-video"
             controls
           />
@@ -1539,7 +1539,7 @@ const ViewResults = () => {
           <video
             ref={mainStudentRef}
             muted
-            src={`http://localhost:8000/serve_video?path=${data.student_path}`}
+            src={`${API_BASE}/serve_video?path=${data.student_path}`}
             className="small-video"
             controls
             preload="metadata"
@@ -1551,9 +1551,9 @@ const ViewResults = () => {
       {showSegmented && segments.length > 0 && (
         <div className="panel" style={{ marginTop: '15px', marginBottom: '15px' }}>
           <h3 className="panel-title">Selected Segments ({segments.length} found)</h3>
-          <div style={{ 
-            position: 'relative', 
-            height: '40px', 
+          <div style={{
+            position: 'relative',
+            height: '40px',
             background: '#1a1a2e',
             borderRadius: '8px',
             marginTop: '10px',
@@ -1569,12 +1569,12 @@ const ViewResults = () => {
               background: 'linear-gradient(to right, #2d3748, #4a5568)',
               opacity: 0.3
             }}></div>
-            
+
             {/* Segments as colored bars */}
             {segments.map((seg, idx) => {
               const startPercent = (seg.start / timeBase) * 100;
               const widthPercent = ((seg.end - seg.start) / timeBase) * 100;
-              
+
               return (
                 <div
                   key={idx}
@@ -1622,7 +1622,7 @@ const ViewResults = () => {
                 </div>
               );
             })}
-            
+
             {/* Current time indicator */}
             <div style={{
               position: 'absolute',
@@ -1634,11 +1634,11 @@ const ViewResults = () => {
               zIndex: 5
             }}></div>
           </div>
-          
+
           {/* Segment navigation buttons */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
             marginTop: '15px',
             gap: '10px',
             flexWrap: 'wrap'
@@ -1681,7 +1681,7 @@ const ViewResults = () => {
                 </button>
               ))}
             </div>
-            
+
             <button
               onClick={playAllSegments}
               style={{
@@ -1705,20 +1705,20 @@ const ViewResults = () => {
       )}
 
       {/* ✅ EEG COGNITIVE LOAD GRAPH - With Segment Highlights */}
-      <div 
+      <div
         className="eeg-row panel"
         onClick={handleGraphClick}
         style={{ cursor: 'pointer', position: 'relative' }}
       >
         <h3 className="panel-title">
-          EEG Cognitive Load Level 
+          EEG Cognitive Load Level
           <span style={{ fontSize: '12px', color: '#60a5fa', marginLeft: '10px' }}>
             (Click anywhere on graph to jump to time)
           </span>
         </h3>
-        
+
         {/* Click indicator overlay */}
-        <div 
+        <div
           style={{
             position: 'absolute',
             top: '40px',
@@ -1730,7 +1730,7 @@ const ViewResults = () => {
           }}
           title="Click to jump to this time"
         ></div>
-        
+
         <div className="eeg-compact">
           <div className="y-axis-compact">
             {labelOrder.map((label, i) => (
@@ -1746,7 +1746,7 @@ const ViewResults = () => {
               {showSegmented && segments.map((seg, idx) => {
                 const startPercent = (seg.start / timeBase) * 100;
                 const widthPercent = ((seg.end - seg.start) / timeBase) * 100;
-                
+
                 return (
                   <rect
                     key={`segment-bg-${idx}`}
@@ -1759,14 +1759,14 @@ const ViewResults = () => {
                   />
                 );
               })}
-              
+
               {/* EEG Line */}
               {eegData.map((point, i) => {
                 if (i === 0) return null;
                 const prev = eegData[i - 1];
                 const x1 = (prev.time / timeBase) * 100;
                 const x2 = (point.time / timeBase) * 100;
-                
+
                 return (
                   <line
                     key={i}
@@ -1789,12 +1789,12 @@ const ViewResults = () => {
                 stroke="white"
                 strokeWidth="2"
               />
-              
+
               {/* Segment boundary lines */}
               {showSegmented && segments.map((seg, idx) => {
                 const startPercent = (seg.start / timeBase) * 100;
                 const endPercent = (seg.end / timeBase) * 100;
-                
+
                 return (
                   <g key={`segment-lines-${idx}`}>
                     <line
@@ -1830,7 +1830,7 @@ const ViewResults = () => {
             <div
               key={i}
               className="x-label-compact"
-              style={{ 
+              style={{
                 left: `${item.position}%`,
                 fontSize: '10px',
                 cursor: 'pointer'
@@ -1849,8 +1849,8 @@ const ViewResults = () => {
 
       {/* ✅ BRAINWAVE FEATURES GRAPH - With Segment Highlights */}
       {eegData.length > 0 && (
-        <div 
-          className="eeg-row panel" 
+        <div
+          className="eeg-row panel"
           style={{ marginTop: "18px", cursor: 'pointer', position: 'relative' }}
           onClick={handleGraphClick}
         >
@@ -1860,9 +1860,9 @@ const ViewResults = () => {
               (Click anywhere on graph to jump to time)
             </span>
           </h3>
-          
+
           {/* Click indicator overlay */}
-          <div 
+          <div
             style={{
               position: 'absolute',
               top: '40px',
@@ -1874,11 +1874,11 @@ const ViewResults = () => {
             }}
             title="Click to jump to this time"
           ></div>
-          
+
           <div className="eeg-compact">
             <div className="y-axis-compact" style={{ fontSize: '11px' }}>
               {getYAxisLabels().map((label, i) => (
-                <div key={i} className="y-label-compact" style={{ 
+                <div key={i} className="y-label-compact" style={{
                   opacity: 0.8,
                   fontSize: i === 0 || i === 5 ? '12px' : '10px'
                 }}>
@@ -1887,9 +1887,9 @@ const ViewResults = () => {
               ))}
             </div>
             <div className="svg-compact">
-              <svg 
-                className="eeg-svg" 
-                viewBox="0 0 100 100" 
+              <svg
+                className="eeg-svg"
+                viewBox="0 0 100 100"
                 preserveAspectRatio="none"
                 style={{ width: '100%', height: '100%' }}
               >
@@ -1897,7 +1897,7 @@ const ViewResults = () => {
                 {showSegmented && segments.map((seg, idx) => {
                   const startPercent = (seg.start / timeBase) * 100;
                   const widthPercent = ((seg.end - seg.start) / timeBase) * 100;
-                  
+
                   return (
                     <rect
                       key={`segment-wave-bg-${idx}`}
@@ -1910,7 +1910,7 @@ const ViewResults = () => {
                     />
                   );
                 })}
-                
+
                 {/* Horizontal grid lines */}
                 <line x1="0" y1="0" x2="100" y2="0" stroke="#333" strokeWidth="0.2" opacity="0.3" />
                 <line x1="0" y1="20" x2="100" y2="20" stroke="#333" strokeWidth="0.2" opacity="0.3" />
@@ -1921,50 +1921,50 @@ const ViewResults = () => {
 
                 {/* Brainwave lines with filters */}
                 {selectedWaves.delta && (
-                  <polyline 
-                    points={buildPoints("delta")} 
-                    fill="none" 
-                    stroke={waveColors.delta} 
-                    strokeWidth="1.2" 
+                  <polyline
+                    points={buildPoints("delta")}
+                    fill="none"
+                    stroke={waveColors.delta}
+                    strokeWidth="1.2"
                     vectorEffect="non-scaling-stroke"
                     opacity="0.9"
                   />
                 )}
                 {selectedWaves.theta && (
-                  <polyline 
-                    points={buildPoints("theta")} 
-                    fill="none" 
-                    stroke={waveColors.theta} 
+                  <polyline
+                    points={buildPoints("theta")}
+                    fill="none"
+                    stroke={waveColors.theta}
                     strokeWidth="1.2"
                     vectorEffect="non-scaling-stroke"
                     opacity="0.9"
                   />
                 )}
                 {selectedWaves.alpha && (
-                  <polyline 
-                    points={buildPoints("alpha")} 
-                    fill="none" 
-                    stroke={waveColors.alpha} 
+                  <polyline
+                    points={buildPoints("alpha")}
+                    fill="none"
+                    stroke={waveColors.alpha}
                     strokeWidth="1.2"
                     vectorEffect="non-scaling-stroke"
                     opacity="0.9"
                   />
                 )}
                 {selectedWaves.beta && (
-                  <polyline 
-                    points={buildPoints("beta")} 
-                    fill="none" 
-                    stroke={waveColors.beta} 
+                  <polyline
+                    points={buildPoints("beta")}
+                    fill="none"
+                    stroke={waveColors.beta}
                     strokeWidth="1.2"
                     vectorEffect="non-scaling-stroke"
                     opacity="0.9"
                   />
                 )}
                 {selectedWaves.gamma && (
-                  <polyline 
-                    points={buildPoints("gamma")} 
-                    fill="none" 
-                    stroke={waveColors.gamma} 
+                  <polyline
+                    points={buildPoints("gamma")}
+                    fill="none"
+                    stroke={waveColors.gamma}
                     strokeWidth="1.2"
                     vectorEffect="non-scaling-stroke"
                     opacity="0.9"
@@ -1982,12 +1982,12 @@ const ViewResults = () => {
                   vectorEffect="non-scaling-stroke"
                   opacity="0.8"
                 />
-                
+
                 {/* Segment boundary lines */}
                 {showSegmented && segments.map((seg, idx) => {
                   const startPercent = (seg.start / timeBase) * 100;
                   const endPercent = (seg.end / timeBase) * 100;
-                  
+
                   return (
                     <g key={`segment-wave-lines-${idx}`}>
                       <line
@@ -2018,14 +2018,14 @@ const ViewResults = () => {
               </svg>
             </div>
           </div>
-          
+
           {/* X-axis - Make labels clickable too */}
           <div className="x-axis-compact">
             {generateTimeLabels(timeBase, 0).map((item, i) => (
               <div
                 key={i}
                 className="x-label-compact"
-                style={{ 
+                style={{
                   left: `${item.position}%`,
                   fontSize: '10px',
                   cursor: 'pointer'
@@ -2040,12 +2040,12 @@ const ViewResults = () => {
               </div>
             ))}
           </div>
-          
+
           {/* Legend */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            marginTop: '15px', 
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginTop: '15px',
             fontSize: '12px',
             flexWrap: 'wrap'
           }}>
@@ -2081,27 +2081,27 @@ const ViewResults = () => {
                 </span>
               )}
             </div>
-            
+
             {/* Segment labels */}
             {showSegmented && segments.length > 0 && (
-              <div style={{ 
-                display: 'flex', 
-                gap: '10px', 
+              <div style={{
+                display: 'flex',
+                gap: '10px',
                 alignItems: 'center',
                 flexWrap: 'wrap',
                 marginTop: '10px'
               }}>
                 <span style={{ color: '#9ca3af', fontSize: '11px' }}>Segments:</span>
                 {segments.slice(0, 3).map((seg, idx) => (
-                  <span key={idx} style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                  <span key={idx} style={{
+                    display: 'flex',
+                    alignItems: 'center',
                     gap: '3px',
                     fontSize: '11px'
                   }}>
-                    <div style={{ 
-                      width: '10px', 
-                      height: '10px', 
+                    <div style={{
+                      width: '10px',
+                      height: '10px',
                       background: getLabelColor(seg.labels?.[0] || seg.label),
                       borderRadius: '2px'
                     }}></div>
@@ -2118,7 +2118,7 @@ const ViewResults = () => {
           </div>
         </div>
       )}
-   
+
       {/* MAIN CONTROLS */}
       <div className="controls">
         <input
@@ -2139,34 +2139,34 @@ const ViewResults = () => {
         />
         <div>
           <h2>High</h2>
-          <span>Alpha</span><input type="number" onChange={((e)=>{sethighalpha(e.value)})}/>
-          <span>Beta</span><input type="number"  onChange={((e)=>{sethighbeta(e.value)})}/>
-          <span>gamma</span><input type="number" onChange={((e)=>{sethighgamma(e.value)})}/>
-          <span>delta</span><input type="number" onChange={((e)=>{sethighdelta(e.value)})}/>
-          <span>theta</span><input type="number" onChange={((e)=>{sethightheta(e.value)})}/>
+          <span>Alpha</span><input type="number" onChange={((e) => { sethighalpha(e.value) })} />
+          <span>Beta</span><input type="number" onChange={((e) => { sethighbeta(e.value) })} />
+          <span>gamma</span><input type="number" onChange={((e) => { sethighgamma(e.value) })} />
+          <span>delta</span><input type="number" onChange={((e) => { sethighdelta(e.value) })} />
+          <span>theta</span><input type="number" onChange={((e) => { sethightheta(e.value) })} />
 
           <h2>Moderate</h2>
-          <span>Alpha</span><input type="number" onChange={((e)=>{setmodealpha(e.value)})}/>
-          <span>Beta</span><input type="number" onChange={((e)=>{setmodebeta(e.value)})}/>
-          <span>gamma</span><input type="number" onChange={((e)=>{setmmodegamma(e.value)})}/>
-          <span>delta</span><input type="number" onChange={((e)=>{setmodedelta(e.value)})}/>
-          <span>theta</span><input type="number" onChange={((e)=>{setmodetheta(e.value)})}/>
-          
+          <span>Alpha</span><input type="number" onChange={((e) => { setmodealpha(e.value) })} />
+          <span>Beta</span><input type="number" onChange={((e) => { setmodebeta(e.value) })} />
+          <span>gamma</span><input type="number" onChange={((e) => { setmmodegamma(e.value) })} />
+          <span>delta</span><input type="number" onChange={((e) => { setmodedelta(e.value) })} />
+          <span>theta</span><input type="number" onChange={((e) => { setmodetheta(e.value) })} />
+
           <h2>Low</h2>
-          <span>Alpha</span><input type="number" onChange={((e)=>{setlowaplpha(e.value)})}/>
-          <span>Beta</span><input type="number" onChange={((e)=>{setlowbeta(e.value)})}/>
-          <span>gamma</span><input type="number" onChange={((e)=>{setlowgamma(e.value)})}/>
-          <span>delta</span><input type="number" onChange={((e)=>{setlowdelta(e.value)})}/>
-          <span>theta</span><input type="number" onChange={((e)=>{setlowtheta(e.value)})}/>
+          <span>Alpha</span><input type="number" onChange={((e) => { setlowaplpha(e.value) })} />
+          <span>Beta</span><input type="number" onChange={((e) => { setlowbeta(e.value) })} />
+          <span>gamma</span><input type="number" onChange={((e) => { setlowgamma(e.value) })} />
+          <span>delta</span><input type="number" onChange={((e) => { setlowdelta(e.value) })} />
+          <span>theta</span><input type="number" onChange={((e) => { setlowtheta(e.value) })} />
 
         </div>
 
-        <button onClick={()=>{change_eeg_labels()}}>Save</button>
+        <button onClick={() => { change_eeg_labels() }}>Save</button>
         <div className="control-buttons">
           <button onClick={handleMainPlaying} className="play-btn">
             {mainIsPlaying ? "⏸ Pause" : "▶ Play"}
           </button>
-          
+
           {/* Segment navigation buttons in controls */}
           {showSegmented && segments.length > 0 && (
             <div style={{ display: 'flex', gap: '10px', marginLeft: '20px' }}>
@@ -2177,7 +2177,7 @@ const ViewResults = () => {
               >
                 ⏮ Prev Segment
               </button>
-              
+
               <button
                 onClick={goToNextSegment}
                 className="play-btn"

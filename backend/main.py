@@ -68,7 +68,7 @@ from models import (
     AdminResponses, Session_Annotations
 )
 import eeg_streaming
-
+from config import settings
 
 notification_queue = asyncio.Queue(maxsize=100)
 active_sse_connections = set()
@@ -270,9 +270,9 @@ def get_sessions_with_details():
 import os
 import shutil
 
-STUDENT_DIR = r"D:\CV\DATASET\STUDENTS_DATA"
-TEACHER_DIR = r"D:\CV\DATASET\teacher_activity_dataset\Teaching"
-EEG_DIR = r"C:\Users\HP\Desktop\FYP_PROJECT\BACK END\output"
+STUDENT_DIR = settings.STUDENT_DIR
+TEACHER_DIR = settings.TEACHER_DIR
+EEG_DIR = settings.EEG_DIR
 
 for folder in [STUDENT_DIR, TEACHER_DIR, EEG_DIR]:
     os.makedirs(folder, exist_ok=True)
@@ -3441,7 +3441,7 @@ def export_session_report(session_id: int, format: str = "pdf"):
     try:
         # Get session summary
         import requests
-        summary = requests.get(f"http://localhost:8000/api/session_summary/{session_id}").json()
+        summary = requests.get(f"{settings.INTERNAL_API_BASE}/api/session_summary/{session_id}").json()
         
         if "error" in summary:
             return {"error": summary["error"]}

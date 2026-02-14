@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "./api/axiosInstance";
 import "./AdminDashboard.css";
 
 function SimpleAdminDashboard() {
@@ -20,7 +20,7 @@ function SimpleAdminDashboard() {
           return;
         }
 
-        const res = await axios.get(`http://localhost:8000/admins_by_id/${adminId}`);
+        const res = await api.get(`/admins_by_id/${adminId}`);
         setAdminName(res.data.name);
       } catch (error) {
         console.error("Error fetching admin data:", error);
@@ -80,9 +80,9 @@ function SimpleAdminDashboard() {
   }
 
   return (
-    <div className="admin-container" style={{backgroundColor:"lightcoral"}}>
+    <div className="admin-container" style={{ backgroundColor: "lightcoral" }}>
       {/* Enhanced Header */}
-      <header    style={{height:100}}>
+      <header style={{ height: 100 }}>
         <div className="header-left">
           <div className="logo-circle">
             <span className="logo-icon">🧠</span>
@@ -99,10 +99,10 @@ function SimpleAdminDashboard() {
               <span className="welcome-label">Welcome back,</span>
               <span className="welcome-name">{adminName}</span>
             </div>
-            
+
             {/* Profile Section with Dropdown */}
             <div className="profile-section">
-              <button 
+              <button
                 className="profile-btn"
                 onClick={handleProfileClick}
                 aria-expanded={showProfileDropdown}
@@ -130,12 +130,12 @@ function SimpleAdminDashboard() {
                       {/* <div className="dropdown-user-role">Administrator</div> */}
                     </div>
                   </div>
-                  
+
                   <div className="dropdown-divider"></div>
-                  
+
                   <div className="dropdown-menu">
-                    <button 
-                      className="dropdown-item" 
+                    <button
+                      className="dropdown-item"
                       onClick={() => {
                         setShowProfileDropdown(false);
                         navigate("/admin-settings");
@@ -145,9 +145,9 @@ function SimpleAdminDashboard() {
                       <span className="dropdown-icon">⚙️</span>
                       <span>Settings</span>
                     </button>
-                    
-                    <button 
-                      className="dropdown-item" 
+
+                    <button
+                      className="dropdown-item"
                       onClick={() => {
                         setShowProfileDropdown(false);
                         navigate("/help");
@@ -157,9 +157,9 @@ function SimpleAdminDashboard() {
                       <span className="dropdown-icon">❓</span>
                       <span>Help & Support</span>
                     </button>
-                    
-                    <button 
-                      className="dropdown-item" 
+
+                    <button
+                      className="dropdown-item"
                       onClick={() => {
                         setShowProfileDropdown(false);
                         // Edit profile functionality
@@ -170,11 +170,11 @@ function SimpleAdminDashboard() {
                       <span className="dropdown-icon">👤</span>
                       <span>Edit Profile</span>
                     </button>
-                    
+
                     <div className="dropdown-divider"></div>
-                    
-                    <button 
-                      className="dropdown-item logout" 
+
+                    <button
+                      className="dropdown-item logout"
                       onClick={handleLogout}
                       role="menuitem"
                     >
@@ -192,7 +192,7 @@ function SimpleAdminDashboard() {
       {/* Main Content */}
       <main className="admin-main">
         {/* Dashboard Intro */}
-        <section className="admin-intro" style={{width:1100}}>
+        <section className="admin-intro" style={{ width: 1100 }}>
           <h2>Dashboard Overview</h2>
           <p>Manage sessions, teachers, and students efficiently</p>
         </section>
@@ -226,8 +226,8 @@ function SimpleAdminDashboard() {
 
         {/* Navigation Cards */}
         <div className="admin-nav">
-          <div 
-            className="nav-card" 
+          <div
+            className="nav-card"
             onClick={() => navigate("/Sessions")}
             role="button"
             tabIndex={0}
@@ -240,8 +240,8 @@ function SimpleAdminDashboard() {
             <div className="nav-arrow">→</div>
           </div>
 
-          <div 
-            className="nav-card" 
+          <div
+            className="nav-card"
             onClick={() => navigate("/View_teachers")}
             role="button"
             tabIndex={0}
@@ -254,8 +254,8 @@ function SimpleAdminDashboard() {
             <div className="nav-arrow">→</div>
           </div>
 
-          <div 
-            className="nav-card" 
+          <div
+            className="nav-card"
             onClick={() => navigate("/View_sections")}
             role="button"
             tabIndex={0}
@@ -268,12 +268,12 @@ function SimpleAdminDashboard() {
             <div className="nav-arrow">→</div>
           </div>
           <div>
-            
+
           </div>
         </div>
 
         {/* Quick Links */}
-        
+
       </main>
 
       {/* Footer */}

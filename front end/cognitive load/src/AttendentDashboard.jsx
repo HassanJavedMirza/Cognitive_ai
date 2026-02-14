@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./AttendentDashboard.css";
@@ -67,11 +68,11 @@ function AttendentDashboard() {
     setLoading(true);
     try {
       // Fetch attendent data
-      const attendentRes = await axios.get(`http://localhost:8000/Attendent_by_id/${id}`);
+      const attendentRes = await axios.get(`${API_BASE}/Attendent_by_id/${id}`);
       setAttendentData(attendentRes.data);
 
       // Fetch all sessions
-      const sessionRes = await axios.get(`http://localhost:8000/all_Sessions`);
+      const sessionRes = await axios.get(`${API_BASE}/all_Sessions`);
       const allSessions = sessionRes.data;
 
       setSessions(allSessions);
@@ -95,7 +96,7 @@ function AttendentDashboard() {
 
   // Server-Sent Events (Notifications)
   useEffect(() => {
-    const evtSource = new EventSource("http://localhost:8000/events/session");
+    const evtSource = new EventSource(`${API_BASE}/events/session`);
 
     evtSource.onmessage = (event) => {
       const msg = event.data;
@@ -146,31 +147,31 @@ function AttendentDashboard() {
     setShowProfileDropdown(!showProfileDropdown);
   };
 
-  const handleStartStream = (sessionId,teacher_name,student_name) => {
-    navigate("/start_stream", { state: { sid: sessionId , t_name:teacher_name, s_name:student_name} });
+  const handleStartStream = (sessionId, teacher_name, student_name) => {
+    navigate("/start_stream", { state: { sid: sessionId, t_name: teacher_name, s_name: student_name } });
   };
 
   const handleViewResult = async (sessionId) => {
     try {
       // Fetch session details to get teacher and student names
-      const sessionRes = await axios.get(`http://localhost:8000/Sessions_by_sid/${sessionId}`);
+      const sessionRes = await axios.get(`${API_BASE}/Sessions_by_sid/${sessionId}`);
       const sessionData = sessionRes.data;
-      
+
       if (sessionData) {
-        navigate("/view_results", { 
-          state: { 
+        navigate("/view_results", {
+          state: {
             sid: sessionId,
             teacherName: sessionData.teacher_name || "Teacher",
             studentName: sessionData.student_name || "Student"
-          } 
+          }
         });
       } else {
-        navigate("/view-results", { 
-          state: { 
+        navigate("/view-results", {
+          state: {
             sid: sessionId,
             teacherName: "Teacher",
             studentName: "Student"
-          } 
+          }
         });
       }
     } catch (err) {
@@ -190,9 +191,9 @@ function AttendentDashboard() {
 
   const openDeleteModal = async (sessionId) => {
     setSelectedSession(sessionId);
-    
+
     try {
-      const sessionRes = await axios.get(`http://localhost:8000/Sessions_by_sid/${sessionId}`);
+      const sessionRes = await axios.get(`${API_BASE}/Sessions_by_sid/${sessionId}`);
       setSessionToDelete(sessionRes.data);
       setShowDeleteModal(true);
     } catch (err) {
@@ -202,15 +203,15 @@ function AttendentDashboard() {
 
   const handleDeleteResults = async () => {
     if (!selectedSession) return;
-    
+
     setDeletingSession(selectedSession);
-    
+
     try {
       // First, get the result_id for this session
       const resultsRes = await axios.get(
-        `http://localhost:8000/teacher_session_results_by_sid/${selectedSession}`
+        `${API_BASE}/teacher_session_results_by_sid/${selectedSession}`
       );
-      
+
       if (resultsRes.data.error || resultsRes.data.length === 0) {
         alert("No results found to delete!");
         setDeletingSession(null);
@@ -218,37 +219,37 @@ function AttendentDashboard() {
       }
 
       const resultId = resultsRes.data[0].result_id;
-      
+
       // Call the delete API
       const deleteRes = await axios.delete(
-        `http://localhost:8000/clear_session_result/${resultId}`
+        `${API_BASE}/clear_session_result/${resultId}`
       );
 
       if (deleteRes.data.message) {
         // Show success notification
         setNotifications(prev => [
-          { 
-            id: Date.now(), 
+          {
+            id: Date.now(),
             message: `Results deleted for session ${selectedSession}`,
             type: 'success'
-          }, 
+          },
           ...prev
         ]);
-        
+
         // Refresh data
         loadData();
       }
     } catch (err) {
       console.error("Error deleting results:", err);
       alert("Failed to delete session results!");
-      
+
       // Add error notification
       setNotifications(prev => [
-        { 
-          id: Date.now(), 
+        {
+          id: Date.now(),
           message: `Failed to delete results for session ${selectedSession}`,
           type: 'error'
-        }, 
+        },
         ...prev
       ]);
     } finally {
@@ -299,7 +300,7 @@ function AttendentDashboard() {
   return (
     <div className="attendant-container">
       {/* Enhanced Header - Matching Admin Dashboard */}
-      <header className="attendant-header" style={{height:100}}>
+      <header className="attendant-header" style={{ height: 100 }}>
         <div className="header-left">
           <div className="logo-circle">
             <span className="logo-icon">🧠</span>
@@ -446,7 +447,7 @@ function AttendentDashboard() {
       {/* Main Content */}
       <main className="attendant-main">
         {/* Dashboard Intro & Stats */}
-        <section className="intro-section" style={{background:"#1f0c53ff"}}>
+        <section className="intro-section" style={{ background: "#1f0c53ff" }}>
           <div className="intro-text">
             <h2 className="intro-title">Session Overview</h2>
             <p className="intro-subtitle" >
@@ -507,25 +508,25 @@ function AttendentDashboard() {
                   <div className="session-info">
                     <div className="info-row">
                       <span className="info-icon">👨‍🏫</span>
-                      <span className="info-label" style={{color:"black"}}>Teacher:</span>
-                      <span className="info-value" style={{color:"black"}}>{session.teacher_name}</span>
+                      <span className="info-label" style={{ color: "black" }}>Teacher:</span>
+                      <span className="info-value" style={{ color: "black" }}>{session.teacher_name}</span>
                     </div>
                     <div className="info-row">
                       <span className="info-icon">👨‍🎓</span>
-                      <span className="info-label" style={{color:"black"}}>Student:</span>
-                      <span className="info-value" style={{color:"black"}}>{session.student_name}</span>
+                      <span className="info-label" style={{ color: "black" }}>Student:</span>
+                      <span className="info-value" style={{ color: "black" }}>{session.student_name}</span>
                     </div>
                     <div className="info-row">
                       <span className="info-icon">⏰</span>
-                      <span className="info-label" style={{color:"black"}}>Time:</span>
-                      <span className="info-value" style={{color:"black"}}>
+                      <span className="info-label" style={{ color: "black" }}>Time:</span>
+                      <span className="info-value" style={{ color: "black" }}>
                         {session.start_time} - {session.end_time}
                       </span>
                     </div>
                     <div className="info-row">
                       <span className="info-icon">📍</span>
-                      <span className="info-label" style={{color:"black"}}>Venue:</span>
-                      <span className="info-value" style={{color:"black"}}>{session.venue}</span>
+                      <span className="info-label" style={{ color: "black" }}>Venue:</span>
+                      <span className="info-value" style={{ color: "black" }}>{session.venue}</span>
                     </div>
                   </div>
 
@@ -535,7 +536,7 @@ function AttendentDashboard() {
                       <button
                         className="action-btn action-btn-primary"
                         onClick={() => handleStartStream(session.session_id)}
-                        style={{color:"black"}}
+                        style={{ color: "black" }}
                       >
                         ▶️ Start Stream
                       </button>
@@ -546,21 +547,21 @@ function AttendentDashboard() {
                         <button
                           className="action-btn action-btn-secondary"
                           onClick={() => handleViewResult(session.session_id)}
-                          style={{background:"#059669"}}
+                          style={{ background: "#059669" }}
                         >
                           📂 View Results
                         </button>
                         <button
                           className="action-btn action-btn-secondary"
                           onClick={() => handleEditResult(session.session_id)}
-                          style={{background:"#059669"}}
+                          style={{ background: "#059669" }}
                         >
                           ✏️ Edit Results
                         </button>
                         <button
                           className="action-btn action-btn-success"
                           onClick={() => handleUploadResults(session.session_id)}
-                          style={{background:"#059669"}}
+                          style={{ background: "#059669" }}
                         >
                           📤 Upload Results
                         </button>
@@ -568,7 +569,7 @@ function AttendentDashboard() {
                           className="action-btn action-btn-danger"
                           onClick={() => openDeleteModal(session.session_id)}
                           title="Delete all videos and EEG data for this session"
-                          style={{background:"#059669"}}
+                          style={{ background: "#059669" }}
                         >
                           🗑️ Delete Results
                         </button>
@@ -606,14 +607,14 @@ function AttendentDashboard() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Confirm Delete</h3>
-              <button 
+              <button
                 className="modal-close-btn"
                 onClick={() => setShowDeleteModal(false)}
               >
                 ×
               </button>
             </div>
-            
+
             <div className="modal-body">
               {/* <p>Are you sure you want to delete all results for:</p>
               <div className="session-details">
@@ -640,7 +641,7 @@ function AttendentDashboard() {
                   </span>
                 </div>
               </div> */}
-              
+
               <div className="warning-box">
                 <div className="warning-icon">⚠️</div>
                 <div className="warning-text">
@@ -651,7 +652,7 @@ function AttendentDashboard() {
                 </div>
               </div>
             </div>
-            
+
             <div className="modal-footer">
               <button
                 className="modal-btn modal-btn-cancel"

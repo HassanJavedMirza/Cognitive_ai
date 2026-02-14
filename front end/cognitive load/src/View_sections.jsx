@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "./api/axiosInstance";
 import "./View_sections.css";
 import SessionModal from "./SessionModal";
 import RatingModal from "./RatingModal";
@@ -58,7 +58,7 @@ const useDataFetching = () => {
 
 function View_sections() {
   const navigate = useNavigate();
-  
+
   // Modal states using custom hook
   const {
     view: showViewModal,
@@ -76,14 +76,14 @@ function View_sections() {
   const [courses, setCourses] = useState([]);
   const [sessionList, setSessionList] = useState([]);
   const [sectionRatings, setSectionRatings] = useState(null); // Added section ratings state
-  
+
   // Selected item states
   const [selectedSection, setSelectedSection] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedCourseId, setSelectedCourseId] = useState(null);
   const [selectedSessionForRating, setSelectedSessionForRating] = useState(null);
   const [selectedSectionForRatings, setSelectedSectionForRatings] = useState(null); // Added
-  
+
   // Form states
   const [sessionForm, setSessionForm] = useState({
     date: "",
@@ -112,7 +112,7 @@ function View_sections() {
   useEffect(() => {
     const loadSections = async () => {
       const data = await fetchSectionsData(async () => {
-        const res = await axios.get("http://localhost:8000/all_students");
+        const res = await api.get("/all_students");
         const students = res.data;
 
         const sectionCounts = {};
@@ -165,8 +165,8 @@ function View_sections() {
   // Load students for a section
   const loadStudents = async (section) => {
     const data = await fetchStudentsData(async () => {
-      const res = await axios.get(
-        `http://localhost:8000/get_students_of_a_Section?section=${section}`
+      const res = await api.get(
+        `/get_students_of_a_Section?section=${section}`
       );
       setSelectedSection(section);
       setStudents(res.data);
@@ -178,18 +178,18 @@ function View_sections() {
   const loadSectionRatings = async (section) => {
     const data = await fetchSectionRatingsData(async () => {
       setSelectedSectionForRatings(section);
-      
+
       try {
-        const res = await axios.get(
-          `http://localhost:8000/section/${section}/overall_ratings`
+        const res = await api.get(
+          `/section/${section}/overall_ratings`
         );
-        
+
         if (res.data.error) {
           console.warn("Error loading section ratings:", res.data.error);
           setSectionRatings({
             section: section,
             average_rating: 0,
-            rating_distribution: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+            rating_distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
             total_sessions: 0,
             total_students: 0,
             error: res.data.error
@@ -202,13 +202,13 @@ function View_sections() {
         setSectionRatings({
           section: section,
           average_rating: 0,
-          rating_distribution: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+          rating_distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
           total_sessions: 0,
           total_students: 0,
           error: error.message
         });
       }
-      
+
       openModal('sectionRatings');
       return data;
     }, "Error loading section ratings:");
@@ -217,9 +217,9 @@ function View_sections() {
   // Get course name by ID
   const getCourseNameById = useCallback(async (courseId) => {
     if (!courseId) return "Not Assigned";
-    
+
     try {
-      const res = await axios.get(`http://localhost:8000/Course_by_id/${courseId}`);
+      const res = await api.get(`/Course_by_id/${courseId}`);
       if (res.data && res.data.course_name) {
         return res.data.course_name;
       }
@@ -233,9 +233,9 @@ function View_sections() {
   // Get teacher name by ID
   const getTeacherNameById = useCallback(async (teacherId) => {
     if (!teacherId) return "Not Assigned";
-    
+
     try {
-      const res = await axios.get(`http://localhost:8000/get_Teacher_name/${teacherId}`);
+      const res = await api.get(`/get_Teacher_name/${teacherId}`);
       if (typeof res.data === 'string') {
         return res.data;
       } else if (res.data && res.data.name) {
@@ -252,18 +252,18 @@ function View_sections() {
   const viewSessions = async (studentId) => {
     const data = await fetchSessionsData(async () => {
       setSelectedStudent(studentId);
-      
+
       // Fetch sessions for the student
-      const res = await axios.get(
-        `http://localhost:8000/Students_session/${studentId}`
+      const res = await api.get(
+        `/Students_session/${studentId}`
       );
-      
+
       let sessions = Array.isArray(res.data) ? res.data : [];
-      
+
       // Get student info
       const student = students.find(s => s.student_id === studentId);
       const studentName = student ? student.name : `Student ${studentId}`;
-      
+
       // Process sessions to get names and admin responses
       const sessionsWithDetails = await Promise.all(
         sessions.map(async (session) => {
@@ -271,12 +271,12 @@ function View_sections() {
             getCourseNameById(session.course_id),
             getTeacherNameById(session.teacher_id)
           ]);
-          
+
           // Check if admin has responded to this session
           let adminResponse = null;
           try {
-            const responseRes = await axios.get(
-              `http://localhost:8000/sessions/${session.session_id}/check-response`
+            const responseRes = await api.get(
+              `/sessions/${session.session_id}/check-response`
             );
             if (responseRes.data && responseRes.data.has_response) {
               adminResponse = responseRes.data;
@@ -284,7 +284,7 @@ function View_sections() {
           } catch (error) {
             console.warn(`No admin response for session ${session.session_id}:`, error);
           }
-          
+
           return {
             ...session,
             course_name: courseName,
@@ -308,7 +308,7 @@ function View_sections() {
     setTeacherInfo(null);
 
     try {
-      const res = await axios.get(`http://localhost:8000/get_courses_by_student?sid=${studentId}`);
+      const res = await api.get(`/get_courses_by_student?sid=${studentId}`);
       setCourses(res.data);
       openModal('create');
     } catch (error) {
@@ -366,8 +366,8 @@ function View_sections() {
         attendant_id: 1
       };
 
-      const res = await axios.post(
-        "http://localhost:8000/Create_Student_Session",
+      const res = await api.post(
+        "/Create_Student_Session",
         payload
       );
 
@@ -418,15 +418,15 @@ function View_sections() {
         rating: ratingForm.rating
       };
 
-      const res = await axios.post(
-        "http://localhost:8000/responses/",
+      const res = await api.post(
+        "/responses/",
         payload
       );
 
       if (res.data.message) {
         alert("Rating submitted successfully!");
         closeModal('rating');
-        
+
         // Refresh data if view modal is open
         if (showViewModal && selectedStudent) {
           viewSessions(selectedStudent);
@@ -441,7 +441,7 @@ function View_sections() {
   // Helper functions
   const renderStars = useCallback((rating) => {
     if (!rating) return null;
-    
+
     return (
       <div className="flex">
         {[1, 2, 3, 4, 5].map((star) => (
@@ -483,10 +483,10 @@ function View_sections() {
     if (!dateString) return "";
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
       });
     } catch (e) {
       return dateString;
@@ -525,10 +525,10 @@ function View_sections() {
 
   return (
     <div className="main-wrapper">
-      <div className="page-header" style={{"width":1200}}>
+      <div className="page-header" style={{ "width": 1200 }}>
         <h1 className="page-title">Section Management</h1>
         <div className="page-actions">
-          <button 
+          <button
             className="btn btn-secondary mr-2"
             onClick={() => {
               if (selectedSection) {
@@ -540,7 +540,7 @@ function View_sections() {
           >
             📊 View Section Ratings
           </button>
-          <button 
+          <button
             className="btn btn-back"
             onClick={() => navigate("/AdminDashboard")}
           >
@@ -578,7 +578,7 @@ function View_sections() {
                   <p>Section</p>
                   <div className="student-count">{sec.totalStudents}</div>
                   <small>{sec.totalStudents} students</small>
-                  <button 
+                  <button
                     className="mt-2 text-sm text-blue-600 hover:text-blue-800"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -600,7 +600,7 @@ function View_sections() {
                 <h3>Students in Section: {selectedSection}</h3>
                 <span className="section-badge">{students.length} students</span>
               </div>
-              <button 
+              <button
                 className="btn btn-primary"
                 onClick={() => loadSectionRatings(selectedSection)}
               >
@@ -631,7 +631,7 @@ function View_sections() {
                       <h4 className="student-name">{student.name}</h4>
                       <span className="student-arid">{student.arid_no}</span>
                     </div>
-                    
+
                     <div className="student-details">
                       <div className="detail-item">
                         <span className="detail-label">CGPA</span>
@@ -651,12 +651,12 @@ function View_sections() {
                       </div>
                     </div>
 
-                    <div className="student-actions" style={{width:500}}>
+                    <div className="student-actions" style={{ width: 500 }}>
                       <button
                         className="btn btn-info"
                         onClick={() => viewSessions(student.student_id)}
                         disabled={loadingSessions}
-                        
+
                       >
                         <span>📋</span>
                         {loadingSessions ? "Loading..." : "Sessions"}
@@ -665,7 +665,7 @@ function View_sections() {
                       <button
                         className="btn btn-warning"
                         onClick={() => openCreateSessionModal(student.student_id)}
-                        
+
                       >
                         <span>➕</span>
                         Create Session
@@ -725,7 +725,7 @@ function View_sections() {
               <h2 className="modal-title">➕ Create New Session</h2>
               <button className="btn btn-outline" onClick={() => closeModal('create')}>✕</button>
             </div>
-            
+
             <div className="modal-body">
               <div className="space-y-4">
                 <div className="form-group">
@@ -816,7 +816,7 @@ function View_sections() {
                 )}
               </div>
             </div>
-            
+
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => closeModal('create')}>
                 Cancel
@@ -855,7 +855,7 @@ function View_sections() {
               </h2>
               <button className="btn btn-outline" onClick={() => closeModal('sectionRatings')}>✕</button>
             </div>
-            
+
             <div className="modal-body">
               {loadingSectionRatings ? (
                 <div className="loading-container">
@@ -881,7 +881,7 @@ function View_sections() {
                         {renderStars(Math.round(sectionRatings.average_rating))}
                       </div>
                     </div>
-                    
+
                     <div className="stat-card">
                       <div className="stat-label">Total Students</div>
                       <div className="stat-value text-4xl">
@@ -891,7 +891,7 @@ function View_sections() {
                         in this section
                       </div>
                     </div>
-                    
+
                     <div className="stat-card">
                       <div className="stat-label">Total Sessions</div>
                       <div className="stat-value text-4xl">
@@ -911,7 +911,7 @@ function View_sections() {
                         const count = sectionRatings.rating_distribution?.[rating] || 0;
                         const totalRatings = Object.values(sectionRatings.rating_distribution || {}).reduce((a, b) => a + b, 0);
                         const percentage = totalRatings > 0 ? (count / totalRatings) * 100 : 0;
-                        
+
                         return (
                           <div key={rating} className="flex items-center">
                             <div className="w-16">
@@ -921,7 +921,7 @@ function View_sections() {
                             </div>
                             <div className="flex-1 ml-4">
                               <div className="progress-bar-container">
-                                <div 
+                                <div
                                   className={`progress-bar ${getRatingColor(rating).split(' ')[0]}`}
                                   style={{ width: `${percentage}%` }}
                                 >
@@ -985,13 +985,12 @@ function View_sections() {
                                   </div>
                                 </td>
                                 <td className="table-cell">
-                                  <span className={`status-badge ${
-                                    (data.average_rating || 0) >= 4 ? 'bg-green-100 text-green-800' :
-                                    (data.average_rating || 0) >= 3 ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-red-100 text-red-800'
-                                  }`}>
+                                  <span className={`status-badge ${(data.average_rating || 0) >= 4 ? 'bg-green-100 text-green-800' :
+                                      (data.average_rating || 0) >= 3 ? 'bg-yellow-100 text-yellow-800' :
+                                        'bg-red-100 text-red-800'
+                                    }`}>
                                     {(data.average_rating || 0) >= 4 ? 'Excellent' :
-                                     (data.average_rating || 0) >= 3 ? 'Good' : 'Needs Improvement'}
+                                      (data.average_rating || 0) >= 3 ? 'Good' : 'Needs Improvement'}
                                   </span>
                                 </td>
                               </tr>
@@ -1035,7 +1034,7 @@ function View_sections() {
                 </div>
               )}
             </div>
-            
+
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => closeModal('sectionRatings')}>
                 Close

@@ -1,227 +1,227 @@
-  import { useEffect, useState } from "react";
-  import axios from "axios";
-  import { useNavigate } from "react-router-dom";
-  import "./new_session.css";
+import { useEffect, useState } from "react";
+import api from "./api/axiosInstance";
+import { useNavigate } from "react-router-dom";
+import "./new_session.css";
 
-  function NewSession() { 
-    const navigate = useNavigate();
+function NewSession() {
+  const navigate = useNavigate();
 
-    // --- States ---
-    const [students, setStudents] = useState([]);
-    const [sections, setSections] = useState([]);
-    const [filteredStudents, setFilteredStudents] = useState([]);
+  // --- States ---
+  const [students, setStudents] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [filteredStudents, setFilteredStudents] = useState([]);
 
-    const [selectedSection, setSelectedSection] = useState("");
-    const [selectedStudent, setSelectedStudent] = useState("");
-    const [teacherCourses, setTeacherCourses] = useState([]); // Changed from teachers
-    const [selectedTeacherCourse, setSelectedTeacherCourse] = useState(""); // Combined selection
+  const [selectedSection, setSelectedSection] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState("");
+  const [teacherCourses, setTeacherCourses] = useState([]); // Changed from teachers
+  const [selectedTeacherCourse, setSelectedTeacherCourse] = useState(""); // Combined selection
 
-    const [selectedVenue, setSelectedVenue] = useState("");
-    const [selectedDate, setSelectedDate] = useState("");
-    const [startTime, setStartTime] = useState("");
-    const [endTime, setEndTime] = useState("");
-    const [message, setMessage] = useState("");
+  const [selectedVenue, setSelectedVenue] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [message, setMessage] = useState("");
 
-    // --- Fetch all students and extract sections ---
-    useEffect(() => {
-      const fetchStudents = async () => {
-        try {
-          const res = await axios.get("http://localhost:8000/all_students");
-          setStudents(res.data);
-
-          const uniqueSections = [
-            ...new Set(res.data.map((s) => s.section).filter(Boolean)),
-          ];
-          setSections(uniqueSections);
-        } catch (err) {
-          console.error("Error fetching students:", err);
-        }
-      };
-      fetchStudents();
-    }, []);
-
-    // --- When section changes ---
-    const handleSectionChange = (section) => {
-      setSelectedSection(section);
-      setSelectedStudent("");
-      setTeacherCourses([]);
-      setSelectedTeacherCourse("");
-      const filtered = students.filter((s) => s.section === section);
-      setFilteredStudents(filtered);
-    };
-
-    // --- When student selected ---
-    const handleStudentChange = async (sid) => {
-      setSelectedStudent(sid);
-      setSelectedTeacherCourse("");
+  // --- Fetch all students and extract sections ---
+  useEffect(() => {
+    const fetchStudents = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:8000/get_teacher_by_course?sid=${sid}`
-        );
-        setTeacherCourses(res.data);
+        const res = await api.get("/all_students");
+        setStudents(res.data);
+
+        const uniqueSections = [
+          ...new Set(res.data.map((s) => s.section).filter(Boolean)),
+        ];
+        setSections(uniqueSections);
       } catch (err) {
-        console.error("Error fetching teacher-courses:", err);
+        console.error("Error fetching students:", err);
       }
     };
+    fetchStudents();
+  }, []);
 
-    // --- Create new session ---
-    const handleCreateSession = async (e) => {
-      e.preventDefault();
-      setMessage("");
+  // --- When section changes ---
+  const handleSectionChange = (section) => {
+    setSelectedSection(section);
+    setSelectedStudent("");
+    setTeacherCourses([]);
+    setSelectedTeacherCourse("");
+    const filtered = students.filter((s) => s.section === section);
+    setFilteredStudents(filtered);
+  };
 
-      if (!selectedTeacherCourse) {
-        setMessage("❌ Please select a teacher and course.");
-        return;
-      }
+  // --- When student selected ---
+  const handleStudentChange = async (sid) => {
+    setSelectedStudent(sid);
+    setSelectedTeacherCourse("");
+    try {
+      const res = await api.get(
+        `/get_teacher_by_course?sid=${sid}`
+      );
+      setTeacherCourses(res.data);
+    } catch (err) {
+      console.error("Error fetching teacher-courses:", err);
+    }
+  };
 
-      // Parse the selected value (format: "teacherId-courseId")
-      const [teacherId, courseId] = selectedTeacherCourse.split("-").map(Number);
+  // --- Create new session ---
+  const handleCreateSession = async (e) => {
+    e.preventDefault();
+    setMessage("");
 
-      const payload = {
-        course_id: courseId,
-        teacher_id: teacherId,
-        student_id: parseInt(selectedStudent),
-        date: selectedDate,
-        start_time: startTime,
-        end_time: endTime,
-        venue: selectedVenue,
-        admin_id: 1,
-        attendant_id: 1
-      };
+    if (!selectedTeacherCourse) {
+      setMessage("❌ Please select a teacher and course.");
+      return;
+    }
 
-      try {
-        const res = await axios.post(
-          "http://localhost:8000/Create_new_Session",
-          payload
-        );
+    // Parse the selected value (format: "teacherId-courseId")
+    const [teacherId, courseId] = selectedTeacherCourse.split("-").map(Number);
 
-        if (res.data.error) {
-          setMessage(`⚠️ ${res.data.error}`);
-        } else {
-          setMessage(`✅ ${res.data.message}`);
-          console.log("Session Record ID:", res.data.session_record_id);
-          setTimeout(() => {
-            navigate("/Sessions");
-          }, 2000);
-        }
-      } catch (err) {
-        console.error("Error creating session:", err);
-        setMessage("❌ Failed to create session. Try again.");
-      }
+    const payload = {
+      course_id: courseId,
+      teacher_id: teacherId,
+      student_id: parseInt(selectedStudent),
+      date: selectedDate,
+      start_time: startTime,
+      end_time: endTime,
+      venue: selectedVenue,
+      admin_id: 1,
+      attendant_id: 1
     };
 
-    return (
-      <div className="new-session-container">
-        {/* <h1 className="page-title" >🧩 Create New Session</h1> */}
+    try {
+      const res = await api.post(
+        "/Create_new_Session",
+        payload
+      );
 
-        <form className="new-session-form" onSubmit={handleCreateSession}>
-          {/* SECTION */}
-          <label>Section:</label>
-          <select
-            value={selectedSection}
-            onChange={(e) => handleSectionChange(e.target.value)}
-            required
-          >
-            <option value="">Select Section</option>
-            {sections.map((sec, i) => (
-              <option key={i} value={sec}>
-                {sec}
-              </option>
-            ))}
-          </select>
+      if (res.data.error) {
+        setMessage(`⚠️ ${res.data.error}`);
+      } else {
+        setMessage(`✅ ${res.data.message}`);
+        console.log("Session Record ID:", res.data.session_record_id);
+        setTimeout(() => {
+          navigate("/Sessions");
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Error creating session:", err);
+      setMessage("❌ Failed to create session. Try again.");
+    }
+  };
 
-          {/* STUDENTS */}
-          {selectedSection && (
-            <>
-              <label>Student:</label>
-              <select
-                value={selectedStudent}
-                onChange={(e) => handleStudentChange(e.target.value)}
-                required
-              >
-                <option value="">Select Student</option>
-                {filteredStudents.map((s) => (
-                  <option key={s.student_id} value={s.student_id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </>
-          )}
+  return (
+    <div className="new-session-container">
+      {/* <h1 className="page-title" >🧩 Create New Session</h1> */}
 
-          {/* TEACHER & COURSE COMBINED */}
-          {teacherCourses.length > 0 && (
-            <>
-              <label>Teacher & Course:</label>
-              <select
-                value={selectedTeacherCourse}
-                onChange={(e) => setSelectedTeacherCourse(e.target.value)}
-                required
-              >
-                <option value="">Select Teacher & Course</option>
-                {teacherCourses.map((tc) => (
-                  <option 
-                    key={`${tc.teacher_id}-${tc.course_id}`} 
-                    value={`${tc.teacher_id}-${tc.course_id}`}
-                  >
-                    {tc.name} - {tc.course_name}
-                  </option>
-                ))}
-              </select>
-            </>
-          )}
+      <form className="new-session-form" onSubmit={handleCreateSession}>
+        {/* SECTION */}
+        <label>Section:</label>
+        <select
+          value={selectedSection}
+          onChange={(e) => handleSectionChange(e.target.value)}
+          required
+        >
+          <option value="">Select Section</option>
+          {sections.map((sec, i) => (
+            <option key={i} value={sec}>
+              {sec}
+            </option>
+          ))}
+        </select>
 
-          {/* VENUE */}
-          <label>Venue:</label>
-          <select
-            value={selectedVenue}
-            onChange={(e) => setSelectedVenue(e.target.value)}
-            required
-          >
-            <option value="">Select Venue</option>
-            {Array.from({ length: 14 }, (_, i) => `LT${i + 1}`).map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </select>
+        {/* STUDENTS */}
+        {selectedSection && (
+          <>
+            <label>Student:</label>
+            <select
+              value={selectedStudent}
+              onChange={(e) => handleStudentChange(e.target.value)}
+              required
+            >
+              <option value="">Select Student</option>
+              {filteredStudents.map((s) => (
+                <option key={s.student_id} value={s.student_id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
 
-          <label>Date:</label>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            required
-          />
+        {/* TEACHER & COURSE COMBINED */}
+        {teacherCourses.length > 0 && (
+          <>
+            <label>Teacher & Course:</label>
+            <select
+              value={selectedTeacherCourse}
+              onChange={(e) => setSelectedTeacherCourse(e.target.value)}
+              required
+            >
+              <option value="">Select Teacher & Course</option>
+              {teacherCourses.map((tc) => (
+                <option
+                  key={`${tc.teacher_id}-${tc.course_id}`}
+                  value={`${tc.teacher_id}-${tc.course_id}`}
+                >
+                  {tc.name} - {tc.course_name}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
 
-          <label>Start Time:</label>
-          <input
-            type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            required
-          />
+        {/* VENUE */}
+        <label>Venue:</label>
+        <select
+          value={selectedVenue}
+          onChange={(e) => setSelectedVenue(e.target.value)}
+          required
+        >
+          <option value="">Select Venue</option>
+          {Array.from({ length: 14 }, (_, i) => `LT${i + 1}`).map((v) => (
+            <option key={v} value={v}>
+              {v}
+            </option>
+          ))}
+        </select>
 
-          <label>End Time:</label>
-          <input
-            type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            required
-          />
+        <label>Date:</label>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          required
+        />
 
-          <button type="submit" className="submit-btn">
-            Create Session
-          </button>
+        <label>Start Time:</label>
+        <input
+          type="time"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+          required
+        />
 
-          {message && <p className="form-message">{message}</p>}
-        </form>
+        <label>End Time:</label>
+        <input
+          type="time"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+          required
+        />
 
-        <button className="back-btn" onClick={() => navigate("/Sessions")} style={{marginRight:300, marginLeft:20}}>
-          ← Back to Sessions
+        <button type="submit" className="submit-btn">
+          Create Session
         </button>
-      </div>
-    );
-  }
 
-  export default NewSession;
+        {message && <p className="form-message">{message}</p>}
+      </form>
+
+      <button className="back-btn" onClick={() => navigate("/Sessions")} style={{ marginRight: 300, marginLeft: 20 }}>
+        ← Back to Sessions
+      </button>
+    </div>
+  );
+}
+
+export default NewSession;

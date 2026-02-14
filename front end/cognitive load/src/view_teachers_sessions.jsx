@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
 const View_teachers_sessions = () => {
 
   const location = useLocation();
@@ -25,7 +27,7 @@ const View_teachers_sessions = () => {
     const fetchSessions = async () => {
       try {
         const results = await axios.get(
-          `http://localhost:8000/get_teachers_sessions_by_id/${teacher_id}`
+          `${API_BASE}/get_teachers_sessions_by_id/${teacher_id}`
         );
 
         console.log("API Response:", results.data);

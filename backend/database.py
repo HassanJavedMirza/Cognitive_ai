@@ -1,10 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-
-DATABASE_URL = "mysql+pymysql://root:1234@localhost/cognitive_load"
+from config import settings
 
 engine = create_engine(
-    DATABASE_URL,
+    settings.DATABASE_URL,
     pool_pre_ping=True,  
     pool_size=10,         
     max_overflow=20       

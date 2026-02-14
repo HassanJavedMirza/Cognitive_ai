@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './CompareProgress.css';
@@ -7,7 +8,7 @@ function CompareProgressPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { studentId, studentName, section } = location.state || {};
-  
+
   const [availableSessions, setAvailableSessions] = useState([]);
   const [selectedSession1, setSelectedSession1] = useState('');
   const [selectedSession2, setSelectedSession2] = useState('');
@@ -17,32 +18,32 @@ function CompareProgressPage() {
   const [comparisonData, setComparisonData] = useState(null);
   const [labelStats, setLabelStats] = useState({ session1: [], session2: [] });
   const [brainwaveStats, setBrainwaveStats] = useState({ session1: [], session2: [] });
-  const [cognitiveScores, setCognitiveScores] = useState({ 
-    session1: 0, 
-    session2: 0, 
+  const [cognitiveScores, setCognitiveScores] = useState({
+    session1: 0,
+    session2: 0,
     difference: 0,
-    improvement: false 
+    improvement: false
   });
 
   // Fetch student sessions
   useEffect(() => {
     const fetchSessions = async () => {
       if (!studentId) return;
-      
+
       setLoading(true);
       setError(null);
-      
+
       try {
         console.log('Fetching sessions for student:', studentId);
         const response = await axios.get(
-          `http://localhost:8000/Students_session/${studentId}`
+          `${API_BASE}/Students_session/${studentId}`
         );
-        
+
         console.log('Sessions response:', response.data);
-        
+
         if (Array.isArray(response.data)) {
           setAvailableSessions(response.data);
-          
+
           // Set default selections if we have at least 2 sessions
           if (response.data.length >= 2) {
             setSelectedSession1(response.data[0].session_id.toString());
@@ -68,39 +69,39 @@ function CompareProgressPage() {
       if (!selectedSession1 || !selectedSession2 || selectedSession1 === selectedSession2) {
         return;
       }
-      
+
       setLoadingComparison(true);
       setComparisonData(null);
       setLabelStats({ session1: [], session2: [] });
       setBrainwaveStats({ session1: [], session2: [] });
       setCognitiveScores({ session1: 0, session2: 0, difference: 0, improvement: false });
-      
+
       try {
         console.log('Comparing sessions:', selectedSession1, selectedSession2);
-        
+
         // Fetch data for both sessions in parallel
         const [session1Data, session2Data] = await Promise.all([
           fetchSessionData(selectedSession1),
           fetchSessionData(selectedSession2)
         ]);
-        
+
         console.log('Session 1 full data:', session1Data);
         console.log('Session 2 full data:', session2Data);
-        
+
         // Compare the data
         const comparison = compareSessions(session1Data, session2Data);
         setComparisonData(comparison);
-        
+
         // Try to fetch and process EEG data if paths exist
         if (session1Data.eegFilePath && session2Data.eegFilePath &&
-            session1Data.eegFilePath !== 'null' && session2Data.eegFilePath !== 'null') {
+          session1Data.eegFilePath !== 'null' && session2Data.eegFilePath !== 'null') {
           try {
             await fetchAndProcessEEGData(session1Data, session2Data);
           } catch (eegError) {
             console.log('Could not process EEG data:', eegError.message);
           }
         }
-        
+
       } catch (err) {
         console.error('Error in comparison:', err);
         setError('Failed to compare sessions: ' + err.message);
@@ -116,22 +117,22 @@ function CompareProgressPage() {
   const fetchSessionData = async (sessionId) => {
     try {
       console.log(`Fetching data for session ${sessionId}`);
-      
+
       // 1. Get session details
       const sessionResponse = await axios.get(
-        `http://localhost:8000/Sessions_by_sid/${sessionId}`
+        `${API_BASE}/Sessions_by_sid/${sessionId}`
       );
-      
+
       // 2. Get session results (including EEG path) - USING THE NEW ENDPOINT
       let sessionResults = null;
       let eegFilePath = null;
       try {
         const resultsResponse = await axios.get(
-          `http://localhost:8000/teacher_session_results_by_sid/${sessionId}`
+          `${API_BASE}/teacher_session_results_by_sid/${sessionId}`
         );
-        
+
         console.log(`Results for session ${sessionId}:`, resultsResponse.data);
-        
+
         if (Array.isArray(resultsResponse.data) && resultsResponse.data.length > 0) {
           sessionResults = resultsResponse.data[0];
           eegFilePath = sessionResults.eeg_path;
@@ -142,18 +143,18 @@ function CompareProgressPage() {
       } catch (resultsError) {
         console.log(`No session results for session ${sessionId}:`, resultsError.message);
       }
-      
+
       // 3. Get admin response/rating
       let adminResponse = null;
       try {
         const responseCheck = await axios.get(
-          `http://localhost:8000/sessions/${sessionId}/check-response`
+          `${API_BASE}/sessions/${sessionId}/check-response`
         );
         adminResponse = responseCheck.data;
       } catch (respError) {
         console.log(`No admin response for session ${sessionId}:`, respError.message);
       }
-      
+
       return {
         sessionId,
         sessionDetails: sessionResponse.data,
@@ -161,7 +162,7 @@ function CompareProgressPage() {
         adminResponse,
         eegFilePath
       };
-      
+
     } catch (error) {
       console.error(`Error fetching data for session ${sessionId}:`, error);
       throw error;
@@ -176,17 +177,17 @@ function CompareProgressPage() {
         fetchEEGDataFromPath(session1Data.eegFilePath, session1Data.sessionId),
         fetchEEGDataFromPath(session2Data.eegFilePath, session2Data.sessionId)
       ]);
-      
+
       console.log('EEG Data 1:', eegData1);
       console.log('EEG Data 2:', eegData2);
-      
+
       if (eegData1 && eegData2) {
         // Process label statistics
         processLabelStatistics(eegData1, eegData2);
-        
+
         // Process brainwave statistics
         processBrainwaveStatistics(eegData1, eegData2);
-        
+
         // Calculate cognitive scores
         calculateCognitiveScores(eegData1, eegData2);
       }
@@ -201,16 +202,16 @@ function CompareProgressPage() {
       if (!filePath || filePath === 'null') {
         return null;
       }
-      
+
       console.log(`Fetching EEG data for session ${sessionId}`);
-      
+
       // Try the new endpoint first
       try {
         const response = await axios.get(
-          `http://localhost:8000/api/eeg-data/${sessionId}`,
+          `${API_BASE}/api/eeg-data/${sessionId}`,
           { timeout: 10000 }
         );
-        
+
         if (response.data && response.data.data) {
           console.log(`Got EEG data for session ${sessionId}: ${response.data.row_count} rows`);
           return response.data;
@@ -220,14 +221,14 @@ function CompareProgressPage() {
         }
       } catch (error) {
         console.log(`EEG endpoint failed: ${error.message}`);
-        
+
         // Fallback to summary endpoint
         try {
           const summaryResponse = await axios.get(
-            `http://localhost:8000/api/session_summary/${sessionId}`,
+            `${API_BASE}/api/session_summary/${sessionId}`,
             { timeout: 5000 }
           );
-          
+
           if (summaryResponse.data && !summaryResponse.data.error) {
             console.log(`Got EEG summary for session ${sessionId}`);
             return summaryResponse.data;
@@ -236,9 +237,9 @@ function CompareProgressPage() {
           console.log(`Summary endpoint also failed: ${summaryError.message}`);
         }
       }
-      
+
       return null;
-      
+
     } catch (error) {
       console.error(`Error fetching EEG data:`, error);
       return null;
@@ -248,7 +249,7 @@ function CompareProgressPage() {
   // Helper function to find columns
   const findColumn = (data, possibleNames) => {
     if (!data || data.length === 0) return null;
-    
+
     const firstRow = data[0];
     for (const name of possibleNames) {
       if (firstRow.hasOwnProperty(name)) {
@@ -265,18 +266,18 @@ function CompareProgressPage() {
         if (!eegData || !eegData.data || !Array.isArray(eegData.data)) {
           return [];
         }
-        
+
         const csvData = eegData.data;
         const labelColumn = findColumn(csvData, ['Label', 'label', 'Prediction', 'prediction', 'Cognitive_State', 'cognitive_state']);
-        
+
         if (!labelColumn) {
           console.log(`No label column found for ${sessionName}`);
           return [];
         }
-        
+
         const labelCounts = {};
         let totalRows = 0;
-        
+
         // Count occurrences of each label
         csvData.forEach(row => {
           const label = String(row[labelColumn]).toLowerCase().trim();
@@ -285,7 +286,7 @@ function CompareProgressPage() {
             totalRows++;
           }
         });
-        
+
         // Convert to array with percentages
         return Object.entries(labelCounts)
           .map(([label, count]) => ({
@@ -295,18 +296,18 @@ function CompareProgressPage() {
           }))
           .sort((a, b) => b.count - a.count); // Sort by count descending
       };
-      
+
       const session1Labels = getLabelStats(eegData1, 'Session 1');
       const session2Labels = getLabelStats(eegData2, 'Session 2');
-      
+
       console.log('Label stats session 1:', session1Labels);
       console.log('Label stats session 2:', session2Labels);
-      
+
       setLabelStats({
         session1: session1Labels,
         session2: session2Labels
       });
-      
+
     } catch (error) {
       console.error('Error processing label statistics:', error);
     }
@@ -319,9 +320,9 @@ function CompareProgressPage() {
         if (!eegData || !eegData.data || !Array.isArray(eegData.data)) {
           return [];
         }
-        
+
         const csvData = eegData.data;
-        
+
         // Find brainwave columns
         const brainwaveColumns = {
           delta: findColumn(csvData, ['Delta', 'delta']),
@@ -330,24 +331,24 @@ function CompareProgressPage() {
           beta: findColumn(csvData, ['Beta', 'beta']),
           gamma: findColumn(csvData, ['Gamma', 'gamma'])
         };
-        
+
         // Calculate statistics for each brainwave
         const stats = [];
         const brainwaveNames = ['Delta', 'Theta', 'Alpha', 'Beta', 'Gamma'];
-        
+
         brainwaveNames.forEach(band => {
           const column = brainwaveColumns[band.toLowerCase()];
           if (column) {
             const values = csvData
               .map(row => parseFloat(row[column]))
               .filter(val => !isNaN(val));
-            
+
             if (values.length > 0) {
               const sum = values.reduce((a, b) => a + b, 0);
               const avg = sum / values.length;
               const min = Math.min(...values);
               const max = Math.max(...values);
-              
+
               stats.push({
                 band,
                 average: avg.toFixed(4),
@@ -358,21 +359,21 @@ function CompareProgressPage() {
             }
           }
         });
-        
+
         return stats;
       };
-      
+
       const session1Waves = getBrainwaveStats(eegData1, 'Session 1');
       const session2Waves = getBrainwaveStats(eegData2, 'Session 2');
-      
+
       console.log('Brainwave stats session 1:', session1Waves);
       console.log('Brainwave stats session 2:', session2Waves);
-      
+
       setBrainwaveStats({
         session1: session1Waves,
         session2: session2Waves
       });
-      
+
     } catch (error) {
       console.error('Error processing brainwave statistics:', error);
     }
@@ -385,12 +386,12 @@ function CompareProgressPage() {
         if (!eegData || !eegData.data || !Array.isArray(eegData.data)) {
           return 0;
         }
-        
+
         const csvData = eegData.data;
         const labelColumn = findColumn(csvData, ['Label', 'label', 'Prediction', 'prediction', 'Cognitive_State', 'cognitive_state']);
-        
+
         if (!labelColumn) return 50; // Default score if no labels
-        
+
         // Define label weights
         const labelWeights = {
           'distracted': 10,
@@ -406,10 +407,10 @@ function CompareProgressPage() {
           'concentrated': 95,
           'very high': 100
         };
-        
+
         let totalWeight = 0;
         let totalCount = 0;
-        
+
         csvData.forEach(row => {
           const label = String(row[labelColumn]).toLowerCase().trim();
           if (label && labelWeights[label]) {
@@ -417,16 +418,16 @@ function CompareProgressPage() {
             totalCount++;
           }
         });
-        
+
         if (totalCount === 0) return 50;
-        
+
         // Also consider brainwave data if available
         let brainwaveBonus = 0;
         const brainwaveColumns = {
           alpha: findColumn(csvData, ['Alpha', 'alpha']),
           beta: findColumn(csvData, ['Beta', 'beta'])
         };
-        
+
         if (brainwaveColumns.alpha && brainwaveColumns.beta) {
           const alphaValues = csvData
             .map(row => parseFloat(row[brainwaveColumns.alpha]))
@@ -434,36 +435,36 @@ function CompareProgressPage() {
           const betaValues = csvData
             .map(row => parseFloat(row[brainwaveColumns.beta]))
             .filter(val => !isNaN(val));
-          
+
           if (alphaValues.length > 0 && betaValues.length > 0) {
             const alphaAvg = alphaValues.reduce((a, b) => a + b, 0) / alphaValues.length;
             const betaAvg = betaValues.reduce((a, b) => a + b, 0) / betaValues.length;
-            
+
             // Higher beta/alpha ratio indicates better focus (research-based)
             const ratio = betaAvg / alphaAvg;
             brainwaveBonus = Math.min(20, Math.max(0, (ratio - 0.5) * 10));
           }
         }
-        
+
         const baseScore = totalWeight / totalCount;
         const finalScore = Math.min(100, Math.max(0, baseScore + brainwaveBonus));
-        
+
         return Math.round(finalScore);
       };
-      
+
       const score1 = calculateScore(eegData1);
       const score2 = calculateScore(eegData2);
       const difference = score2 - score1;
-      
+
       console.log('Cognitive scores:', { score1, score2, difference });
-      
+
       setCognitiveScores({
         session1: score1,
         session2: score2,
         difference,
         improvement: difference > 0
       });
-      
+
     } catch (error) {
       console.error('Error calculating cognitive scores:', error);
     }
@@ -472,7 +473,7 @@ function CompareProgressPage() {
   // Compare two sessions
   const compareSessions = (session1Data, session2Data) => {
     console.log('Comparing sessions data:', session1Data, session2Data);
-    
+
     // Compare ratings
     const rating1 = session1Data.adminResponse?.rating || 0;
     const rating2 = session2Data.adminResponse?.rating || 0;
@@ -482,18 +483,18 @@ function CompareProgressPage() {
       difference: rating2 - rating1,
       improvement: rating2 > rating1
     };
-    
+
     // Compare responses
     const response1 = session1Data.adminResponse?.response || 'No response';
     const response2 = session2Data.adminResponse?.response || 'No response';
-    
+
     // Check EEG file availability
     const hasEEG1 = !!session1Data.eegFilePath && session1Data.eegFilePath !== 'null';
     const hasEEG2 = !!session2Data.eegFilePath && session2Data.eegFilePath !== 'null';
-    
+
     // Generate insights
     const insights = generateInsights(ratingComparison, hasEEG1, hasEEG2);
-    
+
     return {
       session1: session1Data,
       session2: session2Data,
@@ -508,23 +509,23 @@ function CompareProgressPage() {
   // Generate insights
   const generateInsights = (ratingComparison, hasEEG1, hasEEG2) => {
     const insights = [];
-    
+
     if (ratingComparison.improvement) {
       insights.push(`Admin rating improved from ${ratingComparison.session1}/5 to ${ratingComparison.session2}/5`);
     } else if (ratingComparison.difference < 0) {
       insights.push(`Admin rating decreased from ${ratingComparison.session1}/5 to ${ratingComparison.session2}/5`);
     }
-    
+
     if (cognitiveScores.improvement) {
       insights.push(`Cognitive score improved by ${cognitiveScores.difference} points`);
     } else if (cognitiveScores.difference < 0) {
       insights.push(`Cognitive score decreased by ${Math.abs(cognitiveScores.difference)} points`);
     }
-    
+
     if (hasEEG2 && !hasEEG1) {
       insights.push('EEG data now available for analysis');
     }
-    
+
     return insights;
   };
 
@@ -571,17 +572,17 @@ function CompareProgressPage() {
       {/* Header */}
       <div className="page-header">
         <div className="header-left">
-          <button 
+          <button
             className="btn-back"
             onClick={() => navigate("/View_sections")}
           >
             ← Back to Sections
           </button>
-          <h1 className="page-title" style={{marginLeft:260}}>Session Comparison</h1>
+          <h1 className="page-title" style={{ marginLeft: 260 }}>Session Comparison</h1>
         </div>
         <div className="header-info">
-          <span className="student-name" style={{color:'white'}}>Student: {studentName}</span>
-          <span className="section" style={{color:'white'}}> Section: {section}</span>
+          <span className="student-name" style={{ color: 'white' }}>Student: {studentName}</span>
+          <span className="section" style={{ color: 'white' }}> Section: {section}</span>
         </div>
       </div>
 
@@ -589,10 +590,10 @@ function CompareProgressPage() {
       <div className="session-selection-section">
         <div className="selection-card">
           <h3>Select Sessions to Compare</h3>
-          
+
           {loading && <div className="loading-message">Loading sessions...</div>}
           {error && <div className="error-message">{error}</div>}
-          
+
           <div className="selection-fields">
             <div className="select-group">
               <label>Session 1:</label>
@@ -603,8 +604,8 @@ function CompareProgressPage() {
               >
                 <option value="">-- Select Session --</option>
                 {availableSessions.map(session => (
-                  <option 
-                    key={session.session_id} 
+                  <option
+                    key={session.session_id}
                     value={session.session_id}
                     disabled={session.session_id.toString() === selectedSession2}
                   >
@@ -625,8 +626,8 @@ function CompareProgressPage() {
               >
                 <option value="">-- Select Session --</option>
                 {availableSessions.map(session => (
-                  <option 
-                    key={session.session_id} 
+                  <option
+                    key={session.session_id}
                     value={session.session_id}
                     disabled={session.session_id.toString() === selectedSession1}
                   >
@@ -674,7 +675,7 @@ function CompareProgressPage() {
                   </>
                 )}
               </div>
-              
+
               <div className="session-detail-card">
                 <h4>Session 2 Details</h4>
                 {comparisonData.session2.sessionDetails[0] && (
@@ -717,8 +718,8 @@ function CompareProgressPage() {
                         {cognitiveScores.difference}
                       </td>
                       <td>
-                        {cognitiveScores.improvement ? 
-                          <span className="positive">Improvement ✓</span> : 
+                        {cognitiveScores.improvement ?
+                          <span className="positive">Improvement ✓</span> :
                           <span className="negative">Decline ✗</span>
                         }
                       </td>
@@ -753,7 +754,7 @@ function CompareProgressPage() {
               <p className="chart-description">
                 Shows frequency and percentage of each cognitive state detected during the sessions.
               </p>
-              
+
               <div className="stats-tables-container">
                 <div className="stats-table-wrapper">
                   <h4>Session 1 - Cognitive States</h4>
@@ -788,7 +789,7 @@ function CompareProgressPage() {
                     </table>
                   </div>
                 </div>
-                
+
                 <div className="stats-table-wrapper">
                   <h4>Session 2 - Cognitive States</h4>
                   <div className="table-responsive">
@@ -823,7 +824,7 @@ function CompareProgressPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="label-analysis">
                 <h4>Analysis:</h4>
                 <ul>
@@ -840,7 +841,7 @@ function CompareProgressPage() {
               <p className="chart-description">
                 Average values of different brainwave frequencies measured during the sessions.
               </p>
-              
+
               <div className="stats-tables-container">
                 <div className="stats-table-wrapper">
                   <h4>Session 1 - Brainwave Frequencies</h4>
@@ -871,7 +872,7 @@ function CompareProgressPage() {
                     </table>
                   </div>
                 </div>
-                
+
                 <div className="stats-table-wrapper">
                   <h4>Session 2 - Brainwave Frequencies</h4>
                   <div className="table-responsive">
@@ -902,7 +903,7 @@ function CompareProgressPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="brainwave-guide">
                 <h4>Brainwave Interpretation:</h4>
                 <div className="guide-grid">
@@ -979,7 +980,7 @@ function CompareProgressPage() {
                   {comparisonData.responseComparison.session1}
                 </div>
               </div>
-              
+
               <div className="response-card">
                 <h4>Session 2 Response</h4>
                 <div className="response-content">
@@ -1083,39 +1084,39 @@ const getLabelWeight = (label) => {
     'Concentrated': 95,
     'Very High': 100
   };
-  
+
   return labelWeights[label] || 50;
 };
 
 const getLabelAnalysis = (stats1, stats2) => {
   const analysis = [];
-  
+
   // Find focused states
   const focusedStates1 = stats1.filter(s => ['Focused', 'Concentrated', 'High', 'Very High'].includes(s.label));
   const focusedStates2 = stats2.filter(s => ['Focused', 'Concentrated', 'High', 'Very High'].includes(s.label));
-  
+
   const focusedPercentage1 = focusedStates1.reduce((sum, s) => sum + parseFloat(s.percentage), 0);
   const focusedPercentage2 = focusedStates2.reduce((sum, s) => sum + parseFloat(s.percentage), 0);
-  
+
   if (focusedPercentage2 > focusedPercentage1) {
     analysis.push(`Focused states increased from ${focusedPercentage1.toFixed(1)}% to ${focusedPercentage2.toFixed(1)}%`);
   } else if (focusedPercentage2 < focusedPercentage1) {
     analysis.push(`Focused states decreased from ${focusedPercentage1.toFixed(1)}% to ${focusedPercentage2.toFixed(1)}%`);
   }
-  
+
   // Find distracted states
   const distractedStates1 = stats1.filter(s => ['Distracted', 'Drowsy', 'Very Low'].includes(s.label));
   const distractedStates2 = stats2.filter(s => ['Distracted', 'Drowsy', 'Very Low'].includes(s.label));
-  
+
   const distractedPercentage1 = distractedStates1.reduce((sum, s) => sum + parseFloat(s.percentage), 0);
   const distractedPercentage2 = distractedStates2.reduce((sum, s) => sum + parseFloat(s.percentage), 0);
-  
+
   if (distractedPercentage2 < distractedPercentage1) {
     analysis.push(`Distracted states reduced from ${distractedPercentage1.toFixed(1)}% to ${distractedPercentage2.toFixed(1)}%`);
   } else if (distractedPercentage2 > distractedPercentage1) {
     analysis.push(`Distracted states increased from ${distractedPercentage1.toFixed(1)}% to ${distractedPercentage2.toFixed(1)}%`);
   }
-  
+
   return analysis.map((item, index) => <li key={index}>{item}</li>);
 };
 
@@ -1133,24 +1134,24 @@ const getFrequencyRange = (band) => {
 const calculateBetaAlphaRatio = (stats1, stats2) => {
   const getBeta = (stats) => stats.find(s => s.band === 'Beta')?.average || 0;
   const getAlpha = (stats) => stats.find(s => s.band === 'Alpha')?.average || 1;
-  
+
   const ratio1 = parseFloat(getBeta(stats1)) / parseFloat(getAlpha(stats1));
   const ratio2 = parseFloat(getBeta(stats2)) / parseFloat(getAlpha(stats2));
-  
+
   return `Session 1: ${ratio1.toFixed(2)}, Session 2: ${ratio2.toFixed(2)} (Change: ${((ratio2 - ratio1) / ratio1 * 100).toFixed(1)}%)`;
 };
 
 const calculateFocusImprovement = (stats1, stats2) => {
   const focusedStates = ['Focused', 'Concentrated', 'High', 'Very High'];
-  
+
   const focused1 = stats1.filter(s => focusedStates.includes(s.label));
   const focused2 = stats2.filter(s => focusedStates.includes(s.label));
-  
+
   const percentage1 = focused1.reduce((sum, s) => sum + parseFloat(s.percentage), 0);
   const percentage2 = focused2.reduce((sum, s) => sum + parseFloat(s.percentage), 0);
-  
+
   const improvement = percentage2 - percentage1;
-  
+
   if (improvement > 0) {
     return `Focused states increased by ${improvement.toFixed(1)}%`;
   } else if (improvement < 0) {

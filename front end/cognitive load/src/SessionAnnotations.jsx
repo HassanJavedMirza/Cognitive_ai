@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 import './SessionAnnotations.css';
 
 const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
@@ -26,14 +27,14 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`http://localhost:8000/api/annotations/${sessionId}`);
-      
+      const response = await fetch(`${API_BASE}/api/annotations/${sessionId}`);
+
       if (!response.ok) {
         throw new Error(`Failed to fetch: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setAnnotations(data.annotations || []);
       } else {
@@ -49,7 +50,7 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
 
   useEffect(() => {
     fetchAnnotations();
-    
+
     // Poll for updates every 30 seconds
     const interval = setInterval(fetchAnnotations, 30000);
     return () => clearInterval(interval);
@@ -64,13 +65,13 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
 
     try {
       setLoading(true);
-      
-      const url = isEdit 
-        ? `http://localhost:8000/api/annotations/${annotationData.id}`
-        : 'http://localhost:8000/api/annotations/create';
-      
+
+      const url = isEdit
+        ? `${API_BASE}/api/annotations/${annotationData.id}`
+        : `${API_BASE}/api/annotations/create`;
+
       const method = isEdit ? 'PUT' : 'POST';
-      
+
       const payload = {
         session_id: sessionId,
         timestamp: currentTime,
@@ -87,7 +88,7 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
 
       const response = await fetch(url, {
         method,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
@@ -98,18 +99,18 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
 
       if (data.success) {
         await fetchAnnotations();
-        
+
         if (!isEdit) {
           // Show success message
           setError('✅ Annotation saved!');
           setTimeout(() => setError(null), 2000);
-          
+
           // Reset form
           setShowAddForm(false);
-          setNewAnnotation({ 
-            title: '', 
-            description: '', 
-            type: 'bookmark', 
+          setNewAnnotation({
+            title: '',
+            description: '',
+            type: 'bookmark',
             color: '#3b82f6',
             importance: 'medium'
           });
@@ -137,7 +138,7 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
 
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/annotations/${annotationId}`, {
+      const response = await fetch(`${API_BASE}/api/annotations/${annotationId}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json'
@@ -177,10 +178,10 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
 
   const cancelEdit = () => {
     setEditingId(null);
-    setNewAnnotation({ 
-      title: '', 
-      description: '', 
-      type: 'bookmark', 
+    setNewAnnotation({
+      title: '',
+      description: '',
+      type: 'bookmark',
       color: '#3b82f6',
       importance: 'medium'
     });
@@ -190,13 +191,13 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
   const filteredAnnotations = annotations
     .filter(annotation => {
       // Search filter
-      const matchesSearch = searchTerm === '' || 
+      const matchesSearch = searchTerm === '' ||
         annotation.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (annotation.description && annotation.description.toLowerCase().includes(searchTerm.toLowerCase()));
-      
+
       // Type filter
       const matchesType = filterType === 'all' || annotation.type === filterType;
-      
+
       return matchesSearch && matchesType;
     })
     .sort((a, b) => {
@@ -265,10 +266,10 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
       low: { label: 'Low', color: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)' }
     };
     const cfg = config[importance] || config.medium;
-    
+
     return (
-      <span className="importance-badge" style={{ 
-        color: cfg.color, 
+      <span className="importance-badge" style={{
+        color: cfg.color,
         backgroundColor: cfg.bg,
         border: `1px solid ${cfg.color}20`
       }}>
@@ -331,20 +332,20 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
             </div>
           )}
         </div>
-        
+
         <div className="header-controls">
           {/* Toggle Button */}
-          <button 
+          <button
             onClick={toggleExpanded}
             className={`toggle-btn ${isExpanded ? 'expanded' : ''}`}
             title={isExpanded ? "Hide annotations" : "Show annotations"}
           >
             {isExpanded ? '▲ Hide' : '▼ Show'}
           </button>
-          
+
           {/* Add Annotation Button - Only shown when expanded */}
           {isExpanded && (
-            <button 
+            <button
               onClick={handleAddAnnotation}
               className="add-annotation-btn"
               disabled={loading}
@@ -427,9 +428,9 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
               <div className="form-grid">
                 <div className="form-group">
                   <label>Type</label>
-                  <select 
+                  <select
                     value={newAnnotation.type}
-                    onChange={(e) => setNewAnnotation({...newAnnotation, type: e.target.value})}
+                    onChange={(e) => setNewAnnotation({ ...newAnnotation, type: e.target.value })}
                     className="form-select"
                   >
                     <option value="bookmark">🔖 Bookmark</option>
@@ -443,9 +444,9 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
 
                 <div className="form-group">
                   <label>Importance</label>
-                  <select 
+                  <select
                     value={newAnnotation.importance}
-                    onChange={(e) => setNewAnnotation({...newAnnotation, importance: e.target.value})}
+                    onChange={(e) => setNewAnnotation({ ...newAnnotation, importance: e.target.value })}
                     className="form-select"
                   >
                     <option value="low">Low Priority</option>
@@ -457,10 +458,10 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
                 <div className="form-group">
                   <label>Color</label>
                   <div className="color-picker">
-                    <input 
+                    <input
                       type="color"
                       value={newAnnotation.color}
-                      onChange={(e) => setNewAnnotation({...newAnnotation, color: e.target.value})}
+                      onChange={(e) => setNewAnnotation({ ...newAnnotation, color: e.target.value })}
                       className="color-input"
                     />
                     <span className="color-preview" style={{ backgroundColor: newAnnotation.color }}></span>
@@ -470,11 +471,11 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
 
               <div className="form-group">
                 <label>Title *</label>
-                <input 
+                <input
                   type="text"
                   placeholder="What happened at this moment?"
                   value={newAnnotation.title}
-                  onChange={(e) => setNewAnnotation({...newAnnotation, title: e.target.value})}
+                  onChange={(e) => setNewAnnotation({ ...newAnnotation, title: e.target.value })}
                   className="annotation-input"
                   maxLength={100}
                 />
@@ -483,10 +484,10 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
 
               <div className="form-group">
                 <label>Description (Optional)</label>
-                <textarea 
+                <textarea
                   placeholder="Add more details, observations, or follow-up actions..."
                   value={newAnnotation.description}
-                  onChange={(e) => setNewAnnotation({...newAnnotation, description: e.target.value})}
+                  onChange={(e) => setNewAnnotation({ ...newAnnotation, description: e.target.value })}
                   className="annotation-textarea"
                   rows="4"
                   maxLength={500}
@@ -495,13 +496,13 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
               </div>
 
               <div className="form-actions">
-                <button 
-                  onClick={() => editingId ? cancelEdit() : setShowAddForm(false)} 
+                <button
+                  onClick={() => editingId ? cancelEdit() : setShowAddForm(false)}
                   className="cancel-btn"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={() => saveAnnotation({
                     ...newAnnotation,
                     id: editingId
@@ -527,9 +528,9 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
                   className="search-input"
                 />
               </div>
-              
+
               <div className="filters">
-                <select 
+                <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
                   className="filter-select"
@@ -543,7 +544,7 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
                   <option value="achievement">Achievements</option>
                 </select>
 
-                <select 
+                <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="sort-select"
@@ -568,13 +569,13 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
                 <div className="empty-icon">📝</div>
                 <h4>No annotations found</h4>
                 <p>
-                  {searchTerm || filterType !== 'all' 
+                  {searchTerm || filterType !== 'all'
                     ? 'Try changing your search or filters'
                     : 'Add your first annotation to mark important moments'}
                 </p>
                 {!showAddForm && (
-                  <button 
-                    onClick={() => setShowAddForm(true)} 
+                  <button
+                    onClick={() => setShowAddForm(true)}
                     className="add-first-btn"
                   >
                     + Create First Annotation
@@ -584,10 +585,10 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
             ) : (
               <div className="annotations-grid">
                 {filteredAnnotations.map((annotation) => (
-                  <div 
-                    key={annotation.annotation_id} 
+                  <div
+                    key={annotation.annotation_id}
                     className={`annotation-card ${editingId === annotation.annotation_id ? 'editing' : ''}`}
-                    style={{ 
+                    style={{
                       borderLeftColor: annotation.color,
                       borderLeftWidth: annotation.importance === 'high' ? '6px' : '4px'
                     }}
@@ -598,25 +599,25 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
                         <span className="type-label">{getTypeLabel(annotation.type)}</span>
                         {getImportanceBadge(annotation.importance)}
                       </div>
-                      
+
                       <div className="annotation-actions">
-                        <button 
+                        <button
                           onClick={() => onJumpToTime(annotation.timestamp)}
                           className="action-btn jump-btn"
                           title="Jump to this time in video"
                         >
                           ▶ Jump to {formatTime(annotation.timestamp)}
                         </button>
-                        
-                        <button 
+
+                        <button
                           onClick={() => startEditing(annotation)}
                           className="action-btn edit-btn"
                           title="Edit annotation"
                         >
                           ✏️
                         </button>
-                        
-                        <button 
+
+                        <button
                           onClick={() => deleteAnnotation(annotation.annotation_id)}
                           className="action-btn delete-btn"
                           title="Delete annotation"
@@ -628,11 +629,11 @@ const SessionAnnotations = ({ sessionId, currentTime, onJumpToTime }) => {
 
                     <div className="annotation-card-content">
                       <div className="annotation-title">{annotation.title}</div>
-                      
+
                       {annotation.description && (
                         <div className="annotation-description">{annotation.description}</div>
                       )}
-                      
+
                       <div className="annotation-meta">
                         <span className="meta-item">
                           <span className="meta-icon">⏱️</span>

@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "./api/axiosInstance";
 import "./TeacherDashboard.css";
 
 function TeacherDashboard() {
-  
+
   const location = useLocation();
   const navigate = useNavigate();
   const { id } = location.state || {};
-  
+
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
 
@@ -74,15 +74,15 @@ function TeacherDashboard() {
     setError("");
     try {
       console.log("Loading data for teacher ID:", id);
-      
+
       // Get teacher info
-      const teacherRes = await axios.get(`http://localhost:8000/get_teacher_by_user_id/${id}`);
+      const teacherRes = await api.get(`/get_teacher_by_user_id/${id}`);
       console.log("Teacher response:", teacherRes.data);
-      
+
       if (!teacherRes.data || !teacherRes.data.name) {
         throw new Error("Teacher data not found");
       }
-      
+
       setTeacherName(teacherRes.data.name);
       const teacherId = teacherRes.data.id || teacherRes.data.teacher_id;
       setTeacherId(teacherId);
@@ -91,9 +91,9 @@ function TeacherDashboard() {
       // Get teacher sessions
       let sessionData = [];
       try {
-        const sessionRes = await axios.get(`http://localhost:8000/teachers_session/${teacherId}`);
+        const sessionRes = await api.get(`/teachers_session/${teacherId}`);
         console.log("Session response:", sessionRes.data);
-        
+
         // Handle different response formats
         if (sessionRes.data && typeof sessionRes.data === 'object') {
           if (sessionRes.data.error === 'Not found!') {
@@ -132,7 +132,7 @@ function TeacherDashboard() {
           let courseName = "Unknown Course";
           if (s.course_id) {
             try {
-              const courseRes = await axios.get(`http://localhost:8000/Course_by_id/${s.course_id}`);
+              const courseRes = await api.get(`/Course_by_id/${s.course_id}`);
               if (courseRes.data && courseRes.data.course_name) {
                 courseName = courseRes.data.course_name;
               } else if (courseRes.data && typeof courseRes.data === 'string') {
@@ -147,7 +147,7 @@ function TeacherDashboard() {
           let studentName = "Unknown Student";
           if (s.student_id) {
             try {
-              const studentRes = await axios.get(`http://localhost:8000/get_student_name_by_id/${s.student_id}`);
+              const studentRes = await api.get(`/get_student_name_by_id/${s.student_id}`);
               if (studentRes.data && typeof studentRes.data === 'string') {
                 studentName = studentRes.data;
               } else if (studentRes.data && studentRes.data.name) {
@@ -190,7 +190,7 @@ function TeacherDashboard() {
         try {
           const sessionDate = new Date(sess.date);
           sessionDate.setHours(0, 0, 0, 0);
-          
+
           if (sessionDate.toDateString() === today.toDateString()) {
             todayList.push(sess);
           } else if (sessionDate > today) {
@@ -207,14 +207,14 @@ function TeacherDashboard() {
       setTodaySessions(todayList);
       setUpcomingSessions(upcomingList);
       setRecentSessions(recentList);
-      
+
       console.log("Categorized sessions - Today:", todayList.length, "Upcoming:", upcomingList.length, "Recent:", recentList.length);
-      
+
       // Load additional data for results, responses and ratings
       await loadSessionResults(teacherId);
       await loadAdminResponses(teacherId);
       await loadSessionRatings(teacherId);
-      
+
       setLoading(false);
     } catch (err) {
       console.error("Error loading data:", err);
@@ -232,12 +232,12 @@ function TeacherDashboard() {
     try {
       // Get session results for teacher's sessions
       const results = [];
-      
+
       // For each recent session, check if it has results
       for (const session of recentSessions) {
         try {
-          const response = await axios.get(`http://localhost:8000/teacher_session_results_by_sid/${session.session_id}`);
-          
+          const response = await api.get(`/teacher_session_results_by_sid/${session.session_id}`);
+
           if (response.data && !response.data.error) {
             results.push({
               session_id: session.session_id,
@@ -251,7 +251,7 @@ function TeacherDashboard() {
           // Skip if no results found
         }
       }
-      
+
       setSessionResults(results);
     } catch (err) {
       console.error("Error loading session results:", err);
@@ -261,7 +261,7 @@ function TeacherDashboard() {
   // Load admin responses
   const loadAdminResponses = async (teacherId) => {
     try {
-      const response = await axios.get(`http://localhost:8000/responses/`);
+      const response = await api.get(`/responses/`);
       if (response.data && response.data.responses) {
         // Filter responses for this teacher's sessions
         const teacherSessionIds = sessions.map(s => s.session_id);
@@ -281,7 +281,7 @@ function TeacherDashboard() {
       const ratings = [];
       for (const session of recentSessions) {
         try {
-          const response = await axios.get(`http://localhost:8000/sessions/${session.session_id}/check-response`);
+          const response = await api.get(`/sessions/${session.session_id}/check-response`);
           if (response.data.has_response && response.data.rating) {
             ratings.push({
               session_id: session.session_id,
@@ -306,43 +306,43 @@ function TeacherDashboard() {
     setIsGeneratingReport(true);
     try {
       setSelectedSessionForReport(sessionId);
-      
+
       // Get session details
       const session = sessions.find(s => s.session_id === sessionId);
-      
+
       // Get EEG summary if available
       let eegSummary = null;
       try {
-        const summaryResponse = await axios.get(`http://localhost:8000/api/session_summary/${sessionId}`);
+        const summaryResponse = await api.get(`/api/session_summary/${sessionId}`);
         if (summaryResponse.data && !summaryResponse.data.error) {
           eegSummary = summaryResponse.data;
         }
       } catch (e) {
         // EEG data not available
       }
-      
+
       // Get admin response if exists
       let adminResponse = null;
       try {
-        const responseCheck = await axios.get(`http://localhost:8000/sessions/${sessionId}/check-response`);
+        const responseCheck = await api.get(`/sessions/${sessionId}/check-response`);
         if (responseCheck.data.has_response) {
           adminResponse = responseCheck.data;
         }
       } catch (e) {
         // No admin response
       }
-      
+
       // Get session results
       let sessionResultsData = null;
       try {
-        const resultsResponse = await axios.get(`http://localhost:8000/teacher_session_results_by_sid/${sessionId}`);
+        const resultsResponse = await api.get(`/teacher_session_results_by_sid/${sessionId}`);
         if (resultsResponse.data && !resultsResponse.data.error) {
           sessionResultsData = resultsResponse.data;
         }
       } catch (e) {
         // No results
       }
-      
+
       const report = {
         session_id: sessionId,
         date: session?.date,
@@ -356,9 +356,9 @@ function TeacherDashboard() {
         generated_at: new Date().toISOString(),
         teacher_name: teacherName
       };
-      
+
       setReportData(report);
-      
+
     } catch (err) {
       console.error("Error generating report:", err);
       alert("Error generating report");
@@ -370,11 +370,11 @@ function TeacherDashboard() {
   // Export report as PDF
   const exportReportAsPDF = async (sessionId) => {
     try {
-      const response = await axios.get(
-        `http://localhost:8000/api/export/session_report/${sessionId}?format=pdf`,
+      const response = await api.get(
+        `/api/export/session_report/${sessionId}?format=pdf`,
         { responseType: 'blob' }
       );
-      
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -397,7 +397,7 @@ function TeacherDashboard() {
   // View response for a session
   const viewSessionResponse = async (sessionId) => {
     try {
-      const response = await axios.get(`http://localhost:8000/sessions/${sessionId}/check-response`);
+      const response = await api.get(`/sessions/${sessionId}/check-response`);
       if (response.data.has_response) {
         alert(`Admin Response for Session ${sessionId}:\n\nRating: ${response.data.rating}/5\n\nFeedback: ${response.data.response}`);
       } else {
@@ -419,7 +419,7 @@ function TeacherDashboard() {
     }
 
     // Connect to SSE endpoint
-    const eventSource = new EventSource("http://localhost:8000/events/session");
+    const eventSource = new EventSource(`/events/session`);
     eventSourceRef.current = eventSource;
 
     eventSource.onopen = () => {
@@ -482,7 +482,7 @@ function TeacherDashboard() {
 
   const formatTime = (timeStr) => {
     if (!timeStr) return "Not set";
-    
+
     try {
       // Handle string time format (e.g., "14:30:00" or "14:30")
       if (typeof timeStr === 'string') {
@@ -490,7 +490,7 @@ function TeacherDashboard() {
         if (timeParts.length >= 2) {
           const hours = parseInt(timeParts[0]);
           const minutes = parseInt(timeParts[1]);
-          
+
           if (!isNaN(hours) && !isNaN(minutes)) {
             const period = hours >= 12 ? 'PM' : 'AM';
             const displayHours = hours % 12 || 12;
@@ -498,14 +498,14 @@ function TeacherDashboard() {
           }
         }
       }
-      
+
       // If time is in seconds (as number)
       if (typeof timeStr === 'number') {
         const h = Math.floor(timeStr / 3600).toString().padStart(2, "0");
         const m = Math.floor((timeStr % 3600) / 60).toString().padStart(2, "0");
         return `${h}:${m}`;
       }
-      
+
       return timeStr; // Return original if can't parse
     } catch {
       return "Invalid time";
@@ -518,11 +518,11 @@ function TeacherDashboard() {
       if (isNaN(date.getTime())) {
         return "Just now";
       }
-      
+
       const now = new Date();
       const diffMs = now - date;
       const diffMins = Math.floor(diffMs / 60000);
-      
+
       if (diffMins < 1) return 'Just now';
       if (diffMins < 60) return `${diffMins} min ago`;
       if (diffMins < 1440) return `${Math.floor(diffMins / 60)} hours ago`;
@@ -548,8 +548,8 @@ function TeacherDashboard() {
   };
 
   const markAsRead = (id) => {
-    setNotifications(prev => 
-      prev.map(notif => 
+    setNotifications(prev =>
+      prev.map(notif =>
         notif.id === id ? { ...notif, read: true } : notif
       )
     );
@@ -560,7 +560,7 @@ function TeacherDashboard() {
   };
 
   const getCurrentSessions = () => {
-    switch(view) {
+    switch (view) {
       case "today": return todaySessions;
       case "upcoming": return upcomingSessions;
       case "recent": return recentSessions;
@@ -589,7 +589,7 @@ function TeacherDashboard() {
 
   // Render different content based on view
   const renderContent = () => {
-    switch(view) {
+    switch (view) {
       case "results":
         return renderResultsView();
       case "responses":
@@ -635,13 +635,13 @@ function TeacherDashboard() {
                   </div>
                 </div>
                 <div className="result-actions">
-                  <button 
+                  <button
                     className="action-btn view-btn"
                     onClick={() => viewSessionDetails(result.session_id)}
                   >
                     View Details
                   </button>
-                  <button 
+                  <button
                     className="action-btn report-btn"
                     onClick={() => generateSessionReport(result.session_id)}
                   >
@@ -689,7 +689,7 @@ function TeacherDashboard() {
                   <div className="response-content">
                     <p>{response.response}</p>
                   </div>
-                  <button 
+                  <button
                     className="action-btn view-full-btn"
                     onClick={() => viewSessionResponse(response.session_id)}
                   >
@@ -740,10 +740,10 @@ function TeacherDashboard() {
                     <p className="feedback-text">{rating.response}</p>
                   </div>
                 )}
-                <button 
+                <button
                   className="action-btn compare-btn"
                   onClick={() => generateSessionReport(rating.session_id)}
-                  style={{color:"black"}}
+                  style={{ color: "black" }}
                 >
                   View Report
                 </button>
@@ -762,7 +762,7 @@ function TeacherDashboard() {
         <div className="report-generator">
           <h3>Generate Report</h3>
           <div className="session-selector">
-            <select 
+            <select
               className="session-select"
               value={selectedSessionForReport || ""}
               onChange={(e) => setSelectedSessionForReport(e.target.value ? parseInt(e.target.value) : null)}
@@ -774,7 +774,7 @@ function TeacherDashboard() {
                 </option>
               ))}
             </select>
-            <button 
+            <button
               className="generate-btn"
               onClick={() => selectedSessionForReport && generateSessionReport(selectedSessionForReport)}
               disabled={!selectedSessionForReport || isGeneratingReport}
@@ -789,7 +789,7 @@ function TeacherDashboard() {
         <div className="report-preview">
           <div className="report-header">
             <h3>Report Preview - Session #{reportData.session_id}</h3>
-            <button 
+            <button
               className="export-btn"
               onClick={() => exportReportAsPDF(reportData.session_id)}
             >
@@ -880,8 +880,8 @@ function TeacherDashboard() {
           <h3>No {view} Sessions</h3>
           <p>
             {view === "today" ? "You don't have any sessions scheduled for today." :
-             view === "upcoming" ? "You don't have any upcoming sessions." :
-             "You don't have any recent sessions."}
+              view === "upcoming" ? "You don't have any upcoming sessions." :
+                "You don't have any recent sessions."}
           </p>
           {sessions.length === 0 && (
             <button className="refresh-btn" onClick={loadData}>
@@ -899,11 +899,11 @@ function TeacherDashboard() {
                   <span>{formatDate(session.date)}</span>
                 </div>
                 <div className={`session-status ${view}`}>
-                  {view === "today" ? "Today" : 
-                   view === "upcoming" ? "Upcoming" : "Completed"}
+                  {view === "today" ? "Today" :
+                    view === "upcoming" ? "Upcoming" : "Completed"}
                 </div>
               </div>
-              
+
               <div className="session-body">
                 {/* Course Name */}
                 <div className="session-detail">
@@ -953,21 +953,21 @@ function TeacherDashboard() {
 
               {/* NEW: Action buttons for each session card */}
               <div className="session-actions">
-                <button 
+                <button
                   className="action-btn small-btn"
                   onClick={() => viewSessionDetails(session.session_id)}
                   title="View Session Details"
                 >
                   👁️ View
                 </button>
-                <button 
+                <button
                   className="action-btn small-btn"
                   onClick={() => viewSessionResponse(session.session_id)}
                   title="View Admin Response"
                 >
                   💬 Response
                 </button>
-                <button 
+                <button
                   className="action-btn small-btn"
                   onClick={() => generateSessionReport(session.session_id)}
                   title="Generate Report"
@@ -1003,7 +1003,7 @@ function TeacherDashboard() {
           <button className="retry-btn" onClick={loadData}>
             Try Again
           </button>
-          <button className="logout-btn" onClick={() => navigate("/")} style={{marginTop: '10px'}}>
+          <button className="logout-btn" onClick={() => navigate("/")} style={{ marginTop: '10px' }}>
             Back to Login
           </button>
         </div>
@@ -1014,7 +1014,7 @@ function TeacherDashboard() {
   return (
     <div className="teacher-dashboard">
       {/* Header */}
-      <header className="teacher-header" style={{height:100}}>
+      <header className="teacher-header" style={{ height: 100 }}>
         <div className="header-left">
           <div className="logo-circle">
             <span className="logo-icon">🧠</span>
@@ -1034,7 +1034,7 @@ function TeacherDashboard() {
 
             {/* Notification Bell */}
             <div className="notification-system" ref={notificationRef}>
-              <button 
+              <button
                 className="bell-button"
                 onClick={handleNotificationClick}
                 aria-label="Notifications"
@@ -1087,10 +1087,10 @@ function TeacherDashboard() {
                 </div>
               )}
             </div>
-            
+
             {/* Profile Section */}
             <div className="profile-section" ref={dropdownRef}>
-              <button 
+              <button
                 className="profile-btn"
                 onClick={handleProfileClick}
                 aria-expanded={showProfileDropdown}
@@ -1115,11 +1115,11 @@ function TeacherDashboard() {
                       <div className="dropdown-user-role">Teacher</div>
                     </div>
                   </div>
-                  
+
                   <div className="dropdown-divider"></div>
-                  
+
                   <div className="dropdown-menu">
-                    <button 
+                    <button
                       className="dropdown-item"
                       onClick={() => {
                         setShowProfileDropdown(false);
@@ -1129,8 +1129,8 @@ function TeacherDashboard() {
                       <span className="dropdown-icon">👤</span>
                       <span>My Profile</span>
                     </button>
-                    
-                    <button 
+
+                    <button
                       className="dropdown-item"
                       onClick={() => {
                         setShowProfileDropdown(false);
@@ -1140,10 +1140,10 @@ function TeacherDashboard() {
                       <span className="dropdown-icon">❓</span>
                       <span>Help & Support</span>
                     </button>
-                    
+
                     <div className="dropdown-divider"></div>
-                    
-                    <button 
+
+                    <button
                       className="dropdown-item logout"
                       onClick={handleLogout}
                     >
@@ -1234,7 +1234,7 @@ function TeacherDashboard() {
               <div className="modal-body">
                 {/* You can add more detailed session information here */}
                 <p>Detailed session information will be displayed here.</p>
-                <button 
+                <button
                   className="action-btn"
                   onClick={() => {
                     generateSessionReport(selectedSessionForDetails);

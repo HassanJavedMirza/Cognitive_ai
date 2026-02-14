@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import api from "./api/axiosInstance";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 import "./StudentDashboard.css";
 
 function StudentDashboard() {
@@ -19,10 +20,10 @@ function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  
+
   // Tracks which session cards are expanded
   const [expandedSessions, setExpandedSessions] = useState({});
-  
+
   // Notification States
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -55,7 +56,7 @@ function StudentDashboard() {
 
     // Establish SSE connection
     const eventSource = new EventSource(
-      `http://localhost:8000/api/notifications/stream/${user_id}`
+      `${API_BASE}/api/notifications/stream/${user_id}`
     );
 
     eventSourceRef.current = eventSource;
@@ -73,10 +74,10 @@ function StudentDashboard() {
     eventSource.addEventListener('notification', (event) => {
       const notification = JSON.parse(event.data);
       console.log('📬 New notification:', notification);
-      
+
       // Add notification to list
       setNotifications(prev => [notification, ...prev]);
-      
+
       // Show browser notification (if permission granted)
       if (Notification.permission === 'granted') {
         new Notification(notification.title, {
@@ -84,18 +85,18 @@ function StudentDashboard() {
           icon: '/notification-icon.png'
         });
       }
-      
+
       // Play sound (optional)
       try {
         const audio = new Audio('/notification-sound.mp3');
-        audio.play().catch(() => {});
-      } catch (e) {}
+        audio.play().catch(() => { });
+      } catch (e) { }
     });
 
     eventSource.onerror = (error) => {
       console.error('❌ SSE connection error:', error);
       setIsConnected(false);
-      
+
       // Auto-reconnect after 5 seconds
       setTimeout(() => {
         console.log('🔄 Attempting to reconnect...');
@@ -121,17 +122,17 @@ function StudentDashboard() {
 
       try {
         setLoading(true);
-        
+
         // Get student info
-        const studentRes = await axios.get(
-          `http://localhost:8000/get_one_student/${user_id}`
+        const studentRes = await api.get(
+          `/get_one_student/${user_id}`
         );
-        
+
         if (studentRes.data) {
           setStudentName(studentRes.data.name || "");
-          
+
           const sid = studentRes.data.student_id;
-          
+
           if (!sid) {
             setError("No student ID found");
             setLoading(false);
@@ -139,19 +140,19 @@ function StudentDashboard() {
           }
 
           // Get student sessions
-          const sessionsRes = await axios.get(
-            `http://localhost:8000/Students_session/${sid}`
+          const sessionsRes = await api.get(
+            `${API_BASE}/Students_session/${sid}`
           );
 
           let sessions = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
-          
+
           // Get admin responses for all sessions
-          const responsesPromises = sessions.map(session => 
-            axios.get(`http://localhost:8000/sessions/${session.session_id}/check-response`)
+          const responsesPromises = sessions.map(session =>
+            api.get(`/sessions/${session.session_id}/check-response`)
               .then(res => ({ session_id: session.session_id, response: res.data }))
               .catch(() => ({ session_id: session.session_id, response: { has_response: false } }))
           );
-          
+
           const responses = await Promise.all(responsesPromises);
           const responseMap = responses.reduce((map, item) => {
             map[item.session_id] = item.response;
@@ -160,7 +161,7 @@ function StudentDashboard() {
 
           // Get EEG data check for all sessions
           const eegCheckPromises = sessions.map(session =>
-            axios.get(`http://localhost:8000/check_eeg_data/${session.session_id}`)
+            api.get(`/check_eeg_data/${session.session_id}`)
               .then(res => ({ session_id: session.session_id, eeg_data: res.data }))
               .catch(() => ({ session_id: session.session_id, eeg_data: { has_eeg: false } }))
           );
@@ -174,7 +175,7 @@ function StudentDashboard() {
           // Get session summaries for sessions with EEG data
           const summaryPromises = sessions.map(session => {
             if (eegMap[session.session_id]?.has_eeg) {
-              return axios.get(`http://localhost:8000/api/session_summary/${session.session_id}`)
+              return api.get(`/api/session_summary/${session.session_id}`)
                 .then(res => ({ session_id: session.session_id, summary: res.data }))
                 .catch(() => ({ session_id: session.session_id, summary: null }));
             }
@@ -195,8 +196,8 @@ function StudentDashboard() {
                 let teacherName = "Unknown Teacher";
                 if (session.teacher_id) {
                   try {
-                    const teacherRes = await axios.get(
-                      `http://localhost:8000/get_Teacher_name/${session.teacher_id}`
+                    const teacherRes = await api.get(
+                      `/get_Teacher_name/${session.teacher_id}`
                     );
                     teacherName = teacherRes.data || "Unknown Teacher";
                   } catch (err) {
@@ -208,8 +209,8 @@ function StudentDashboard() {
                 let courseName = "Unknown Course";
                 if (session.course_id) {
                   try {
-                    const courseRes = await axios.get(
-                      `http://localhost:8000/Course_by_id/${session.course_id}`
+                    const courseRes = await api.get(
+                      `/Course_by_id/${session.course_id}`
                     );
                     courseName = courseRes.data?.course_name || "Unknown Course";
                   } catch (err) {
@@ -252,7 +253,7 @@ function StudentDashboard() {
 
           enrichedSessions.forEach((s) => {
             if (!s || !s.date) return;
-            
+
             const sessionDate = s.date.split("T")[0];
 
             if (sessionDate === today) {
@@ -308,8 +309,8 @@ function StudentDashboard() {
   };
 
   const markAsRead = (index) => {
-    setNotifications(prev => 
-      prev.map((notif, i) => 
+    setNotifications(prev =>
+      prev.map((notif, i) =>
         i === index ? { ...notif, read: true } : notif
       )
     );
@@ -331,10 +332,10 @@ function StudentDashboard() {
       return "Invalid date";
     }
   };
-  
+
   const formatTime = (sec) => {
     if (!sec && sec !== 0) return "N/A";
-    
+
     try {
       return `${String(Math.floor(sec / 3600)).padStart(2, "0")}:${String(
         Math.floor((sec % 3600) / 60)
@@ -349,7 +350,7 @@ function StudentDashboard() {
     const now = new Date();
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins} min ago`;
     if (diffMins < 1440) return `${Math.floor(diffMins / 60)} hours ago`;
@@ -373,7 +374,7 @@ function StudentDashboard() {
     if (!rating || rating === 0) {
       return <span className="no-rating">No rating</span>;
     }
-    
+
     return (
       <div className="rating-stars">
         {[1, 2, 3, 4, 5].map((star) => (
@@ -425,13 +426,13 @@ function StudentDashboard() {
       hasSessionSummary: session.session_summary !== null,
       hasAnyDetails: false
     };
-    
+
     details.hasAnyDetails = details.hasAdminFeedback || details.hasEEGResults;
     return details;
   };
 
   const getSessions = () => {
-    switch(currentView) {
+    switch (currentView) {
       case "today": return Array.isArray(todaySessions) ? todaySessions : [];
       case "upcoming": return Array.isArray(upcomingSessions) ? upcomingSessions : [];
       case "recent": return Array.isArray(recentSessions) ? recentSessions : [];
@@ -473,7 +474,7 @@ function StudentDashboard() {
   return (
     <div className="student-dashboard">
       {/* Header */}
-      <header className="student-header" style={{height:100}}>
+      <header className="student-header" style={{ height: 100 }}>
         <div className="header-left">
           <div className="logo-circle">
             <span className="logo-icon">🧠</span>
@@ -493,7 +494,7 @@ function StudentDashboard() {
 
             {/* Notification Bell */}
             <div className="notification-system" ref={notificationRef}>
-              <button 
+              <button
                 className="bell-button"
                 onClick={handleNotificationClick}
                 aria-label="Notifications"
@@ -537,14 +538,14 @@ function StudentDashboard() {
                           <div className="notification-icon">
                             {getNotificationIcon(notif.type)}
                           </div>
-                          
+
                           <div className="notification-content">
                             <h4>{notif.title}</h4>
                             <p>{notif.message}</p>
                             <span className="notification-time">
                               {formatTimestamp(notif.timestamp)}
                             </span>
-                            
+
                             {notif.data && Object.keys(notif.data).length > 0 && (
                               <div className="notification-data">
                                 {notif.data.venue && <span>📍 {notif.data.venue}</span>}
@@ -559,10 +560,10 @@ function StudentDashboard() {
                 </div>
               )}
             </div>
-            
+
             {/* Profile Section */}
             <div className="profile-section" ref={dropdownRef}>
-              <button 
+              <button
                 className="profile-btn"
                 onClick={handleProfileClick}
                 aria-expanded={showProfileDropdown}
@@ -589,12 +590,12 @@ function StudentDashboard() {
                       <div className="dropdown-user-role">Student</div>
                     </div>
                   </div>
-                  
+
                   <div className="dropdown-divider"></div>
-                  
+
                   <div className="dropdown-menu">
-                    <button 
-                      className="dropdown-item" 
+                    <button
+                      className="dropdown-item"
                       onClick={() => {
                         setShowProfileDropdown(false);
                         alert('Profile settings coming soon!');
@@ -604,9 +605,9 @@ function StudentDashboard() {
                       <span className="dropdown-icon">👤</span>
                       <span>My Profile</span>
                     </button>
-                    
-                    <button 
-                      className="dropdown-item" 
+
+                    <button
+                      className="dropdown-item"
                       onClick={() => {
                         setShowProfileDropdown(false);
                         alert('Help & Support coming soon!');
@@ -616,11 +617,11 @@ function StudentDashboard() {
                       <span className="dropdown-icon">❓</span>
                       <span>Help & Support</span>
                     </button>
-                    
+
                     <div className="dropdown-divider"></div>
-                    
-                    <button 
-                      className="dropdown-item logout" 
+
+                    <button
+                      className="dropdown-item logout"
                       onClick={handleLogout}
                       role="menuitem"
                     >
@@ -686,7 +687,7 @@ function StudentDashboard() {
               {/* Collapse All Button (only shows when sessions are expanded) */}
               {expandedCount > 0 && (
                 <div className="collapse-all-container">
-                  <button 
+                  <button
                     className="collapse-all-btn"
                     onClick={collapseAllSessions}
                   >
@@ -695,12 +696,12 @@ function StudentDashboard() {
                   </button>
                 </div>
               )}
-              
+
               <div className="sessions-grid">
                 {sessions.map((session, index) => {
                   const isExpanded = expandedSessions[session.session_id] || false;
                   const detailsAvailable = getSessionDetailsAvailable(session);
-                  
+
                   return (
                     <div key={index} className={`session-card ${isExpanded ? 'expanded' : ''}`}>
                       <div className="session-header">
@@ -709,11 +710,11 @@ function StudentDashboard() {
                           <span>{formatDate(session.date)}</span>
                         </div>
                         <div className={`session-status ${currentView}`}>
-                          {currentView === "today" ? "Today" : 
-                          currentView === "upcoming" ? "Upcoming" : "Completed"}
+                          {currentView === "today" ? "Today" :
+                            currentView === "upcoming" ? "Upcoming" : "Completed"}
                         </div>
                       </div>
-                      
+
                       <div className="session-body">
                         {/* Course Name */}
                         <div className="session-detail">
@@ -800,9 +801,9 @@ function StudentDashboard() {
                               </span>
                             </button>
                           )}
-                          
+
                           {/* View Detailed Results Button (always available for EEG data) */}
-                        
+
                         </div>
 
                         {/* Expanded Details Section */}
@@ -819,7 +820,7 @@ function StudentDashboard() {
                                   <span className="section-icon">⭐</span>
                                   <h5>Admin Feedback</h5>
                                 </div>
-                                
+
                                 {/* Rating */}
                                 <div className="rating-display">
                                   {renderRatingStars(session.admin_response.rating)}
@@ -827,7 +828,7 @@ function StudentDashboard() {
                                     {getRatingDescription(session.admin_response.rating)}
                                   </span>
                                 </div>
-                                
+
                                 {/* Admin Response */}
                                 {session.admin_response.response && (
                                   <div className="admin-response">
@@ -835,7 +836,7 @@ function StudentDashboard() {
                                     <p className="response-text">{session.admin_response.response}</p>
                                   </div>
                                 )}
-                                
+
                                 {/* Response Date */}
                                 {session.admin_response.created_at && (
                                   <div className="response-date">
@@ -852,7 +853,7 @@ function StudentDashboard() {
                                   <span className="section-icon">🧠</span>
                                   <h5>Brain Activity Analysis</h5>
                                 </div>
-                                
+
                                 {/* Engagement Score */}
                                 {session.session_summary.engagement_score !== undefined && (
                                   <div className="engagement-meter">
@@ -863,58 +864,58 @@ function StudentDashboard() {
                                       </span>
                                     </div>
                                     <div className="progress-bar">
-                                      <div 
+                                      <div
                                         className="progress-fill"
                                         style={{ width: `${session.session_summary.engagement_score}%` }}
                                       ></div>
                                     </div>
                                     <div className="engagement-status">
                                       {session.session_summary.engagement_score >= 80 ? "Excellent Focus" :
-                                      session.session_summary.engagement_score >= 60 ? "Good Focus" :
-                                      session.session_summary.engagement_score >= 40 ? "Moderate Focus" :
-                                      "Needs Improvement"}
+                                        session.session_summary.engagement_score >= 60 ? "Good Focus" :
+                                          session.session_summary.engagement_score >= 40 ? "Moderate Focus" :
+                                            "Needs Improvement"}
                                     </div>
                                   </div>
                                 )}
-                                
+
                                 {/* Cognitive Load Distribution */}
-                                {session.session_summary.cognitive_load_distribution && 
-                                 Object.keys(session.session_summary.cognitive_load_distribution).length > 0 && (
-                                  <div className="cognitive-load">
-                                    <div className="load-label">Cognitive Load Distribution:</div>
-                                    <div className="load-bars">
-                                      {Object.entries(session.session_summary.cognitive_load_distribution)
-                                        .sort(([a], [b]) => {
-                                          const order = ['very low', 'low', 'medium', 'high', 'very high', 'focused', 'relaxed', 'stressed', 'sleepy'];
-                                          return order.indexOf(a) - order.indexOf(b);
-                                        })
-                                        .map(([level, percentage]) => (
-                                          <div key={level} className="load-bar-item">
-                                            <div className="load-bar-label">
-                                              <span 
-                                                className="load-dot"
-                                                style={{ backgroundColor: getCognitiveLoadColor(level) }}
-                                              ></span>
-                                              <span className="load-level">{level.replace('_', ' ').toLowerCase()}</span>
+                                {session.session_summary.cognitive_load_distribution &&
+                                  Object.keys(session.session_summary.cognitive_load_distribution).length > 0 && (
+                                    <div className="cognitive-load">
+                                      <div className="load-label">Cognitive Load Distribution:</div>
+                                      <div className="load-bars">
+                                        {Object.entries(session.session_summary.cognitive_load_distribution)
+                                          .sort(([a], [b]) => {
+                                            const order = ['very low', 'low', 'medium', 'high', 'very high', 'focused', 'relaxed', 'stressed', 'sleepy'];
+                                            return order.indexOf(a) - order.indexOf(b);
+                                          })
+                                          .map(([level, percentage]) => (
+                                            <div key={level} className="load-bar-item">
+                                              <div className="load-bar-label">
+                                                <span
+                                                  className="load-dot"
+                                                  style={{ backgroundColor: getCognitiveLoadColor(level) }}
+                                                ></span>
+                                                <span className="load-level">{level.replace('_', ' ').toLowerCase()}</span>
+                                              </div>
+                                              <div className="load-bar-wrapper">
+                                                <div
+                                                  className="load-bar-fill"
+                                                  style={{
+                                                    width: `${percentage}%`,
+                                                    backgroundColor: getCognitiveLoadColor(level)
+                                                  }}
+                                                ></div>
+                                              </div>
+                                              <span className="load-percentage">
+                                                {typeof percentage === 'number' ? percentage.toFixed(1) : '0.0'}%
+                                              </span>
                                             </div>
-                                            <div className="load-bar-wrapper">
-                                              <div 
-                                                className="load-bar-fill"
-                                                style={{ 
-                                                  width: `${percentage}%`,
-                                                  backgroundColor: getCognitiveLoadColor(level)
-                                                }}
-                                              ></div>
-                                            </div>
-                                            <span className="load-percentage">
-                                              {typeof percentage === 'number' ? percentage.toFixed(1) : '0.0'}%
-                                            </span>
-                                          </div>
-                                        ))}
+                                          ))}
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
-                                
+                                  )}
+
                                 {/* Quick Stats */}
                                 {session.session_summary.attention_dips_count !== undefined && (
                                   <div className="quick-stats">
@@ -942,7 +943,7 @@ function StudentDashboard() {
 
                             {/* Close Details Button */}
                             <div className="close-details-container">
-                              <button 
+                              <button
                                 className="close-details-btn"
                                 onClick={() => toggleSessionDetails(session.session_id)}
                               >

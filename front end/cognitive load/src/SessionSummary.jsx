@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 import "./SessionSummary.css";
 
 const SessionSummary = ({ sessionId }) => {
@@ -14,7 +15,7 @@ const SessionSummary = ({ sessionId }) => {
     try {
       setLoading(true);
       const res = await fetch(
-        `http://localhost:8000/api/session_summary/${sessionId}`
+        `/api/session_summary/${sessionId}`
       );
       if (!res.ok) throw new Error("Failed to load session summary");
       setSummary(await res.json());
@@ -36,8 +37,8 @@ const SessionSummary = ({ sessionId }) => {
       summary.engagement_score >= 75
         ? "Excellent"
         : summary.engagement_score >= 50
-        ? "Average"
-        : "Needs Improvement";
+          ? "Average"
+          : "Needs Improvement";
 
     return { highLoad, verdict };
   }, [summary]);
@@ -110,7 +111,7 @@ const SessionSummary = ({ sessionId }) => {
         <button
           onClick={() =>
             window.open(
-              `http://localhost:8000/api/export/session_report/${sessionId}?format=pdf`
+              `/api/export/session_report/${sessionId}?format=pdf`
             )
           }
         >

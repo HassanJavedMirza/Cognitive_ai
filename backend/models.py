@@ -47,9 +47,13 @@ class Attendent(Base):
 class Sessions(Base):
     __tablename__="sessions"
     session_id=Column(Integer, primary_key=True, index=True,autoincrement=True)
-    course_id=Column(Integer)
-    teacher_id=Column(Integer)
-    student_id=Column(Integer)
+    course_id=Column(Integer, ForeignKey("courses.course_id"))
+    teacher_id=Column(Integer, ForeignKey("teachers.teacher_id"))
+    student_id=Column(Integer, ForeignKey("students.student_id"))
+    
+    teacher = relationship("Teacher", backref="sessions")
+    student = relationship("Student", backref="sessions")
+    course = relationship("Courses", backref="sessions")
     
     date=Column(DATE)
     start_time=Column(Time)

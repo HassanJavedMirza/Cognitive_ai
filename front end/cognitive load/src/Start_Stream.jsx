@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import api from './api/axiosInstance';
 import {
   LineChart,
   Line,
@@ -21,7 +22,7 @@ function Start_Stream() {
   const [arid_no, setarid_no] = useState("");
   const [time, settime] = useState("");
   const [message, setmessage] = useState("");
-  
+
   // Streaming state
   const [isStreaming, setIsStreaming] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -30,7 +31,7 @@ function Start_Stream() {
   const [totalDuration, setTotalDuration] = useState(0);
   const [currentLabel, setCurrentLabel] = useState("N/A");
   const [deviceConnected, setDeviceConnected] = useState(false);
-  
+
   // Graphing State
   const [eegHistory, setEegHistory] = useState([]);
   const [currentBands, setCurrentBands] = useState({
@@ -50,7 +51,7 @@ function Start_Stream() {
     beta: 0,
     gamma: 0
   })));
-  
+
   const graphUpdateRef = useRef(0);
   const animationFrameRef = useRef(null);
 
@@ -58,7 +59,7 @@ function Start_Stream() {
   const [videoRecordingStarted, setVideoRecordingStarted] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const videoStartedRef = useRef(false);
-  
+
   // Results upload state
   const [showResultsUpload, setShowResultsUpload] = useState(false);
   const [teacherVideoFile, setTeacherVideoFile] = useState(null);
@@ -72,7 +73,7 @@ function Start_Stream() {
   const recordedChunksStudentRef = useRef([]);
   const [studentVideoBlob, setStudentVideoBlob] = useState(null);
 
-  const API_BASE = "http://localhost:8000";
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
   const location = useLocation();
   const sessionid = location.state?.sid;
 
@@ -86,24 +87,24 @@ function Start_Stream() {
   };
 
   // --- Enhanced Graph Functions ---
-  
+
   const updateGraphSmoothly = (newData) => {
     if (!isStreaming || isPaused) return;
-    
+
     graphUpdateRef.current += 1;
-    
+
     // Use requestAnimationFrame for smooth updates
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
-    
+
     animationFrameRef.current = requestAnimationFrame(() => {
       setGraphData(prev => {
         const newGraphData = [...prev];
-        
+
         // Remove first point and add new point at the end
         newGraphData.shift();
-        
+
         // Add new data point
         newGraphData.push({
           time: graphUpdateRef.current,
@@ -113,7 +114,7 @@ function Start_Stream() {
           beta: newData.beta || 0,
           gamma: newData.gamma || 0
         });
-        
+
         return newGraphData;
       });
     });
@@ -146,7 +147,7 @@ function Start_Stream() {
 
   const connectEEGDevice = async () => {
     setmessage("🔄 Connecting to EEG device...");
-    
+
     try {
       const response = await fetch(`${API_BASE}/api/eeg/connect`, {
         method: 'POST',
@@ -154,7 +155,7 @@ function Start_Stream() {
       });
 
       const data = await response.json();
-      
+
       if (response.ok && data.success) {
         setDeviceConnected(true);
         setmessage("✅ EEG device connected successfully! Ready to start recording.");
@@ -172,23 +173,23 @@ function Start_Stream() {
 
   const setupCamera = async () => {
     setmessage("📷 Setting up camera...");
-    
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
+        video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
           frameRate: { ideal: 30 }
         },
         audio: true
       });
-      
+
       studentStreamRef.current = stream;
-      
+
       if (studentVideoRef.current) {
         studentVideoRef.current.srcObject = stream;
       }
-      
+
       setIsCameraReady(true);
       setmessage("✅ Camera ready (hidden). Waiting for EEG data...");
       return true;
@@ -211,7 +212,7 @@ function Start_Stream() {
     }
 
     console.log('🎥 Starting video recording (EEG data detected)');
-    
+
     recordedChunksStudentRef.current = [];
     const recorderStudent = new MediaRecorder(studentStreamRef.current, {
       mimeType: 'video/webm;codecs=vp9,opus'
@@ -230,8 +231,8 @@ function Start_Stream() {
     };
 
     mediaRecorderStudentRef.current = recorderStudent;
-    recorderStudent.start(1000); 
-    
+    recorderStudent.start(1000);
+
     videoStartedRef.current = true;
     setVideoRecordingStarted(true);
     setmessage('🎬 Recording synchronized! Both EEG and video are now recording.');
@@ -246,7 +247,7 @@ function Start_Stream() {
       try {
         const response = await fetch(`${API_BASE}/api/eeg/status`);
         const data = await response.json();
-        
+
         setStatus(data.status);
         setElapsedTime(data.elapsed_time);
         setTotalDuration(data.total_duration);
@@ -285,8 +286,8 @@ function Start_Stream() {
 
         // --- Video Sync Logic ---
         if (
-          data.status === 'recording' && 
-          data.elapsed_time >= 3 && 
+          data.status === 'recording' &&
+          data.elapsed_time >= 3 &&
           data.device_connected === true &&
           !videoStartedRef.current
         ) {
@@ -323,13 +324,13 @@ function Start_Stream() {
     }
 
     setmessage("🔄 Initializing recording setup...");
-    
+
     const eegConnected = await connectEEGDevice();
     if (!eegConnected) return;
-    
+
     const cameraReady = await setupCamera();
     if (!cameraReady) return;
-    
+
     setmessage("✅ Setup complete! Click 'Start Recording' to begin.");
   };
 
@@ -352,11 +353,11 @@ function Start_Stream() {
       mediaRecorderStudentRef.current.stop();
       console.log('🛑 Video recording stopped');
     }
-    
+
     if (studentStreamRef.current) {
       studentStreamRef.current.getTracks().forEach(track => track.stop());
     }
-    
+
     videoStartedRef.current = false;
     setVideoRecordingStarted(false);
     setIsCameraReady(false);
@@ -369,10 +370,10 @@ function Start_Stream() {
     }
 
     const duration = convertToSeconds(time, selected);
-    
+
     try {
       setmessage("🎬 Starting EEG recording...\n⏳ Video will auto-start when first EEG data arrives...");
-      
+
       videoStartedRef.current = false;
       setVideoRecordingStarted(false);
       setEegHistory([]); // Reset graph
@@ -390,7 +391,7 @@ function Start_Stream() {
       });
 
       const data = await response.json();
-      
+
       if (response.ok && data.success) {
         setIsStreaming(true);
         setTotalDuration(duration);
@@ -451,16 +452,16 @@ function Start_Stream() {
     }
 
     setUploadingTeacherVideo(true);
-    setmessage(skipTeacherVideo 
-      ? '⏳ Saving session data without teacher video...' 
+    setmessage(skipTeacherVideo
+      ? '⏳ Saving session data without teacher video...'
       : '⏳ Uploading all files...');
 
     try {
       const statusResponse = await fetch(`${API_BASE}/api/eeg/status`);
       const statusData = await statusResponse.json();
-      
+
       const eegFilePath = statusData.predicted_file || statusData.output_filename;
-      
+
       let eegFileBlob = null;
       if (eegFilePath) {
         try {
@@ -489,10 +490,10 @@ function Start_Stream() {
       formData.append('teacher_name', teacherName);
       formData.append('arid_no', arid_no);
       formData.append('eeg_file', eegFileBlob, eegFilename);
-      
+
       const studentFilename = `${studentName}_${arid_no}_student.webm`;
       formData.append('student_video', studentVideoBlob, studentFilename);
-      
+
       if (!skipTeacherVideo) {
         formData.append('teacher_video', teacherVideoFile);
       }
@@ -535,7 +536,7 @@ function Start_Stream() {
     setEegHistory([]);
     initializeGraph(); // Reset graph
     setmessage("✅ Ready for new recording");
-    
+
     if (studentStreamRef.current) {
       studentStreamRef.current.getTracks().forEach(track => track.stop());
       studentStreamRef.current = null;
@@ -654,61 +655,61 @@ function Start_Stream() {
           ) : (
             <div className="space-y-6">
               {/* LIVE STREAMING VIEW */}
-              
+
               {/* Status Header */}
               <div className="bg-white/10 rounded-xl p-4 border border-white/20 flex justify-between items-center">
                 <div className="flex gap-6">
-                   <div className="text-center">
-                      <div className="text-white/60 text-xs uppercase tracking-wide">EEG Status</div>
-                      <div className={`font-bold ${deviceConnected ? 'text-green-400' : 'text-yellow-400'}`}>
-                        {deviceConnected ? '● LIVE' : 'Connecting...'}
-                      </div>
-                   </div>
-                   <div className="text-center border-l border-white/10 pl-6">
-                      <div className="text-white/60 text-xs uppercase tracking-wide">Video Status</div>
-                      <div className={`font-bold ${videoRecordingStarted ? 'text-green-400' : 'text-yellow-400'}`}>
-                        {videoRecordingStarted ? '● REC' : 'Waiting...'}
-                      </div>
-                   </div>
+                  <div className="text-center">
+                    <div className="text-white/60 text-xs uppercase tracking-wide">EEG Status</div>
+                    <div className={`font-bold ${deviceConnected ? 'text-green-400' : 'text-yellow-400'}`}>
+                      {deviceConnected ? '● LIVE' : 'Connecting...'}
+                    </div>
+                  </div>
+                  <div className="text-center border-l border-white/10 pl-6">
+                    <div className="text-white/60 text-xs uppercase tracking-wide">Video Status</div>
+                    <div className={`font-bold ${videoRecordingStarted ? 'text-green-400' : 'text-yellow-400'}`}>
+                      {videoRecordingStarted ? '● REC' : 'Waiting...'}
+                    </div>
+                  </div>
                 </div>
                 <div className="text-center">
-                   <div className="text-white/60 text-xs uppercase tracking-wide">Time Elapsed</div>
-                   <div className="text-3xl font-mono text-white tracking-widest">
-                     {formatTime(elapsedTime)}
-                   </div>
+                  <div className="text-white/60 text-xs uppercase tracking-wide">Time Elapsed</div>
+                  <div className="text-3xl font-mono text-white tracking-widest">
+                    {formatTime(elapsedTime)}
+                  </div>
                 </div>
                 <div className="text-right">
-                   <div className="text-white/60 text-xs uppercase tracking-wide">Cognitive Load</div>
-                   <div className="text-2xl font-bold text-blue-400">{currentLabel}</div>
+                  <div className="text-white/60 text-xs uppercase tracking-wide">Cognitive Load</div>
+                  <div className="text-2xl font-bold text-blue-400">{currentLabel}</div>
                 </div>
               </div>
 
               <div className="grid md:grid-cols-4 gap-6">
-                
+
                 {/* Left Col: Band Power Cards */}
                 <div className="md:col-span-1 space-y-3">
                   <h3 className="text-white text-lg font-semibold mb-2">Band Power (µV)</h3>
-                  
+
                   <div className="bg-white/5 p-3 rounded-lg border-l-4 border-purple-500">
                     <div className="text-xs text-white/60">Gamma (Concentration)</div>
                     <div className="text-xl font-mono text-white">{currentBands.gamma.toFixed(1)}</div>
                   </div>
-                  
+
                   <div className="bg-white/5 p-3 rounded-lg border-l-4 border-blue-500">
                     <div className="text-xs text-white/60">Beta (Active Thinking)</div>
                     <div className="text-xl font-mono text-white">{currentBands.beta.toFixed(1)}</div>
                   </div>
-                  
+
                   <div className="bg-white/5 p-3 rounded-lg border-l-4 border-green-500">
                     <div className="text-xs text-white/60">Alpha (Relaxation)</div>
                     <div className="text-xl font-mono text-white">{currentBands.alpha.toFixed(1)}</div>
                   </div>
-                  
+
                   <div className="bg-white/5 p-3 rounded-lg border-l-4 border-yellow-500">
                     <div className="text-xs text-white/60">Theta (Drowsiness)</div>
                     <div className="text-xl font-mono text-white">{currentBands.theta.toFixed(1)}</div>
                   </div>
-                  
+
                   <div className="bg-white/5 p-3 rounded-lg border-l-4 border-red-500">
                     <div className="text-xs text-white/60">Delta (Sleep)</div>
                     <div className="text-xl font-mono text-white">{currentBands.delta.toFixed(1)}</div>
@@ -716,7 +717,7 @@ function Start_Stream() {
                 </div>
 
                 {/* Right Col: Enhanced Live Graph */}
-{/* Right Col: Enhanced Live Graph */}
+                {/* Right Col: Enhanced Live Graph */}
                 <div className="md:col-span-3 bg-slate-900/50 rounded-xl border border-slate-700/50 p-4">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-white text-lg font-semibold">Live EEG Data Stream</h3>
@@ -726,32 +727,32 @@ function Start_Stream() {
                   </div>
                   <div style={{ width: '100%', height: 300 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart 
-                        data={graphData} 
+                      <AreaChart
+                        data={graphData}
                         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                       >
-                        <CartesianGrid 
-                          strokeDasharray="3 3" 
-                          stroke="#374151" 
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="#374151"
                           horizontal={true}
                           vertical={false}
                         />
-                        <XAxis 
-                          dataKey="time" 
+                        <XAxis
+                          dataKey="time"
                           stroke="#9CA3AF"
                           tick={{ fill: '#9CA3AF', fontSize: 11 }}
                           tickFormatter={(value) => `${value}s`}
                           domain={[0, 60]}
                           ticks={[0, 10, 20, 30, 40, 50, 60]}
                         />
-                        <YAxis 
+                        <YAxis
                           stroke="#9CA3AF"
                           tick={{ fill: '#9CA3AF', fontSize: 11 }}
                           label={{ value: 'µV', angle: -90, position: 'insideLeft', fill: '#9CA3AF' }}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend />
-                        
+
                         {/* Gamma - Purple */}
                         <Area
                           type="monotone"
@@ -766,7 +767,7 @@ function Start_Stream() {
                           isAnimationActive={true}
                           animationDuration={300}
                         />
-                        
+
                         {/* Beta - Blue */}
                         <Area
                           type="monotone"
@@ -781,7 +782,7 @@ function Start_Stream() {
                           isAnimationActive={true}
                           animationDuration={300}
                         />
-                        
+
                         {/* Alpha - Green */}
                         <Area
                           type="monotone"
@@ -796,7 +797,7 @@ function Start_Stream() {
                           isAnimationActive={true}
                           animationDuration={300}
                         />
-                        
+
                         {/* Theta - Yellow */}
                         <Area
                           type="monotone"
@@ -811,7 +812,7 @@ function Start_Stream() {
                           isAnimationActive={true}
                           animationDuration={300}
                         />
-                        
+
                         {/* Delta - Red */}
                         <Area
                           type="monotone"
@@ -826,28 +827,28 @@ function Start_Stream() {
                           isAnimationActive={true}
                           animationDuration={300}
                         />
-                        
+
                         {/* Gradient Definitions */}
                         <defs>
                           <linearGradient id="colorGamma" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={bandColors.gamma} stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor={bandColors.gamma} stopOpacity={0}/>
+                            <stop offset="5%" stopColor={bandColors.gamma} stopOpacity={0.8} />
+                            <stop offset="95%" stopColor={bandColors.gamma} stopOpacity={0} />
                           </linearGradient>
                           <linearGradient id="colorBeta" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={bandColors.beta} stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor={bandColors.beta} stopOpacity={0}/>
+                            <stop offset="5%" stopColor={bandColors.beta} stopOpacity={0.8} />
+                            <stop offset="95%" stopColor={bandColors.beta} stopOpacity={0} />
                           </linearGradient>
                           <linearGradient id="colorAlpha" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={bandColors.alpha} stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor={bandColors.alpha} stopOpacity={0}/>
+                            <stop offset="5%" stopColor={bandColors.alpha} stopOpacity={0.8} />
+                            <stop offset="95%" stopColor={bandColors.alpha} stopOpacity={0} />
                           </linearGradient>
                           <linearGradient id="colorTheta" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={bandColors.theta} stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor={bandColors.theta} stopOpacity={0}/>
+                            <stop offset="5%" stopColor={bandColors.theta} stopOpacity={0.8} />
+                            <stop offset="95%" stopColor={bandColors.theta} stopOpacity={0} />
                           </linearGradient>
                           <linearGradient id="colorDelta" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={bandColors.delta} stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor={bandColors.delta} stopOpacity={0}/>
+                            <stop offset="5%" stopColor={bandColors.delta} stopOpacity={0.8} />
+                            <stop offset="95%" stopColor={bandColors.delta} stopOpacity={0} />
                           </linearGradient>
                         </defs>
                       </AreaChart>
