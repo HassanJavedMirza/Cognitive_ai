@@ -49,7 +49,7 @@ import pandas as pd
 import numpy as np
 from flask import jsonify
 from pydantic import BaseModel, validator
-from sympy import re
+import re
 from fastapi import (
     FastAPI, Depends, HTTPException, Query, File, Response, 
     UploadFile, Form, Request
