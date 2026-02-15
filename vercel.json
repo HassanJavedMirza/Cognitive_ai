@@ -1,4 +1,5 @@
 {
+    "outputDirectory": "front end/cognitive load/dist",
     "rewrites": [
         {
             "source": "/(.*)",
