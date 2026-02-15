@@ -9,7 +9,8 @@ load_dotenv(BASE_DIR / ".env")
 
 class Settings:
     DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://root:1234@localhost/cognitive_load")
-    INTERNAL_API_BASE: str = "http://localhost:8000"
+    PORT = os.getenv("PORT", "8000")
+    INTERNAL_API_BASE: str = os.getenv("INTERNAL_API_BASE", f"http://localhost:{PORT}")
     
     # Storage directories relative to project root by default
     STUDENT_DIR = os.getenv("STUDENT_DIR", str(BASE_DIR / "data" / "students"))
