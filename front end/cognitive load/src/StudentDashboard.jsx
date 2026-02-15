@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import api from "./api/axiosInstance";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
-import "./StudentDashboard.css";
+import "./Studentdashboard.css";
 
 function StudentDashboard() {
   const location = useLocation();
